@@ -1,0 +1,10 @@
+ 16:52:51.208 : Start Physics Data taking. (1000 Events.)
+ 16:52:55.790 : 500 Events were taken.
+ 16:53:00.291 : 1000 Events were taken.
+ 16:53:00.291 : Finish Physics Data taking.
+ 16:53:00.715 : Stop
+ 16:53:00.716 : Final Event Number : 1000
+
+---------------------------------------------
+
+ 16:53:00.736 : 1000 Events were stored.

@@ -1,2 +1,2 @@
-This is My first Git push!
+This is My first Git Comit!
 Thank you.
