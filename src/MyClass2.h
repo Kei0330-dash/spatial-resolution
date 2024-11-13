@@ -41,7 +41,6 @@ public :
    virtual void     Show(Long64_t entry = -1);
 };
 
-#endif
 
 #ifdef MyClass_cxx
 MyClass::MyClass(TTree *tree) : fChain(0) 
@@ -132,3 +131,4 @@ Int_t MyClass::Cut(Long64_t entry)
    return 1;
 }
 #endif // #ifdef MyClass_cxx
+#endif // #ifndef MyClass_h

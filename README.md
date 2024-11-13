@@ -1,2 +1,4 @@
-This is My first Git Comit!
-Thank you.
+これはCERN/ROOTを用いたSOFIST3のデータ解析用のプログラムです。
+まずは、rootをダウンロードしましょう。
+
+rootには
