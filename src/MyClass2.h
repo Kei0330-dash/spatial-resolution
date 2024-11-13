@@ -36,7 +36,7 @@ public :
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
    virtual void     Gaus2D_fitting(double x_center, double y_center, TH2D* h2);
-   virtual void     Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool fit_opt);
+   virtual void     Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit);
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 };

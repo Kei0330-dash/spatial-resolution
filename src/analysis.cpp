@@ -47,10 +47,57 @@ block dfs(int x, int y, std::vector<std::vector<char>> &map){
    return cluster;
 }
 
-void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool fit_opt){
-   //クラスターmap。
+void create_map(std::vector<std::vector<char>> &map, UShort_t weight[128][128], double threshold, bool opt_sub){
+   for(Long64_t i = x_min; i < x_max; i++){
+      for(Long64_t j = y_min; j < y_max; j++){
+         if((u_short)threshold < weight[i][j]){
+            map[i][j] = 'W';
+            if(opt_sub) 
+               weight[i][j] -= (u_short)threshold;
+         }
+         else{ 
+            map[i][j] = '.';
+            if(opt_sub) 
+            weight[i][j] = 0;
+         }
+      }
+   }
+}
+
+int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, UShort_t weight[128][128], bool opt_sub){
+   int count = 0;
+   for(int i = x_min; i < x_max; i++){
+      for(int j = y_min; j < y_max; j++){
+         if(map[i][j] == 'W'){
+            block tmp = dfs(i, j, map);
+            if(tmp.flag)cluster.push_back(tmp);
+            else{if(opt_sub)weight[i][j] = 0, count--;}
+            count++;
+         }
+      }
+   }
+   return count;
+}
+
+void highlight(UShort_t weight[128][128], TBox* &box, double threshold, bool opt_sub){
+   for(Long64_t i = x_min; i < x_max; i++){
+      for(Long64_t j = y_min; j < y_max; j++){
+         if(0 < weight[i][j] && opt_sub ||(u_short)threshold < weight[i][j]){
+            box = new TBox(i, j, i+1, j+1);
+            box->SetLineColor(kRed);
+            box->SetLineWidth(2);
+            box->SetFillStyle(0); // 塗りつぶしなし
+            box->Draw("same");
+         }
+      }
+   }
+}
+
+void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
+   //使用する変数。
    std::vector<std::vector<char>> map(x_max, std::vector<char>(y_max));
    double threshold;
+   std::vector<block> cluster;
    if (fChain == 0) return;
 
    Long64_t nentries = fChain->GetEntriesFast();
@@ -66,36 +113,10 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool fit_opt){
       }
       //閾値の設定
       threshold = h1->GetMean() + 3 * h1->GetStdDev(); 
-      std::cout << "閾値:" <<threshold << std::endl;
+      std::cout << "閾値:" << threshold << std::endl;
 
-      for(Long64_t i = x_min; i < x_max; i++){
-         for(Long64_t j = y_min; j < y_max; j++){
-            if((u_short)threshold < weight[i][j]){
-               map[i][j] = 'W';
-               if(opt_sub) 
-                  weight[i][j] -= (u_short)threshold;
-            }
-            else{ 
-               map[i][j] = '.';
-               if(opt_sub) 
-               weight[i][j] = 0;
-            }
-         }
-      }
-
-      std::vector<block> cluster;
-      int count = 0;
-      for(int i = x_min; i < x_max; i++){
-         for(int j = y_min; j < y_max; j++){
-            if(map[i][j] == 'W'){
-               block tmp = dfs(i, j, map);
-               if(tmp.flag)cluster.push_back(tmp);
-               else{if(opt_sub)weight[i][j] = 0, count--;}
-               count++;
-            }
-         }
-      }
-      std::cout << "クラスターカウント:" << count << std::endl;
+      create_map(map, weight, threshold, opt_sub);
+      std::cout << "クラスターカウント:" << call_dfs(map, cluster, weight, opt_sub) << std::endl;
       if(!cluster.empty()){
       for(int i = 0; i < cluster.size(); i++){
          std::pair<double, double> ans = cluster[i].center_of_gravity(ADC);
@@ -103,8 +124,8 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool fit_opt){
          }
       }
 
-   TH2D *h2 = new TH2D("h2", "2D Histogram;X;Y", 20, 50, 70, 128, y_min, y_max);
-   if(!fit_opt){
+   TH2D *h2 = new TH2D("h2", "2D Histogram;X;Y", 128, x_min, x_max, 128, y_min, y_max);
+   if(!opt_fit){
       for(int i = x_min; i < x_max; i++){
          for(int j = y_min; j < y_max; j++){
             if(weight[i][j])
@@ -129,21 +150,8 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool fit_opt){
    h2->SetStats(0);
    h2->Draw("COLZ");
    TBox *box = nullptr;
-   if(opt_Red){
-      for(Long64_t i = x_min; i < x_max; i++){
-         for(Long64_t j = y_min; j < y_max; j++){
-            if(0 < weight[i][j] && opt_sub ||(u_short)threshold < weight[i][j]){
-               box = new TBox(i, j, i+1, j+1);
-               box->SetLineColor(kRed);
-               box->SetLineWidth(2);
-               box->SetFillStyle(0); // 塗りつぶしなし
-               box->Draw("same");
-            }
-         }
-      }
-   }
-   if(!cluster.empty())
-   if(fit_opt) Gaus2D_fitting(cluster[0].get_xcenter(),cluster[0].get_ycenter(), h2);
+   if(opt_Red) highlight(weight, box, threshold, opt_sub);
+   if(!cluster.empty()) if(opt_fit) Gaus2D_fitting(cluster[0].get_xcenter(),cluster[0].get_ycenter(), h2);
 
    p.pointer_share(h1, h2, box, c1);
    c1->cd(2);
@@ -170,7 +178,7 @@ TFile *file = nullptr;
 /*Rootでこのコードを立ち上げたときはイベント数の引数を設定してこの関数を呼び出す。
 第一引数はeventのどこを参照するか選ぶ。第二引数は、クラスターの強調表示をするかを選ぶ。第三引数はペデスタルの減算するかを選ぶ。
 第四引数はフィッテイングするかを選ぶ。*/
-void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool fit_opt = false) {
+void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false) {
    MyClass *myobj = nullptr;
    p.pointer_delete(); // 共有ポインタの解放
    if(!file){
@@ -182,7 +190,7 @@ void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, boo
    }
    TTree *SOFIST_Data = (TTree*)file->Get("SOFIST_Data");
    myobj = new MyClass(SOFIST_Data);
-   myobj->Loop(event_num, opt_Red, opt_sub, fit_opt);
+   myobj->Loop(event_num, opt_Red, opt_sub, opt_fit);
    delete myobj;
 }
 
@@ -194,7 +202,7 @@ void closefile(){
 
 void run_100(int start, bool opt_Red = false, bool opt_sub = false){
    for(int i = start; i < start + 100; i++){
-      runMyClass(i, opt_Red, opt_sub,false);
+      runMyClass(i, opt_Red, opt_sub, false);
    }
 }
 
