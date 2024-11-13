@@ -230,13 +230,10 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool fit_opt)
    // ヒストグラムの色の範囲を固定
    //h2->SetMinimum(1000); // 最小値を設定
    //h2->SetMaximum(1500); // 最大値を設定
-   // Create a new canvas.
    TCanvas *c1 = new TCanvas("c1", "2D Histogram", 650, 700);
    c1->Divide(1,2);
-
    c1->cd(1);
    h2->SetStats(0);
-   // Draw the histogram.
    h2->Draw("COLZ");
    TBox *box = nullptr;
    if(opt_Red){
@@ -262,7 +259,8 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool fit_opt)
    // box = nullptr;
    // c1 = nullptr;
    c1->cd(2);
-   TH1D *pj = (TH1D*)h2->ProjectionX("T",0,-1,"o");
+
+   TH1D *pj = (TH1D*)h2->ProfileX("T",0,-1,"o");
    // ガウスフィッティング
    TF1 *gaus = new TF1("gaus", "gaus", -5, 5);
    pj->Fit("gaus");
@@ -278,7 +276,6 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool fit_opt)
    pj->Draw();
    gaus->Draw("SAME");
    //cluster[0].Print_NormalDistribution(weight);
-   // Update the canvas.
    c1->Update();
 
 }
@@ -289,7 +286,7 @@ void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, boo
    MyClass *myobj = nullptr;
    p.pointer_delete(); // 共有ポインタの解放
    if(!file){
-      file = TFile::Open("DATA/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
+      file = TFile::Open("../DATA/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
       if (!file || file->IsZombie()) {
          std::cerr << "Error opening file" << std::endl;
          return;
