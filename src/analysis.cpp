@@ -20,6 +20,7 @@ const Int_t x_min = 0, x_max = 128,
             y_min = 0, y_max = 128;
 //
 all_delete p;
+TFile *file = nullptr;
 //深さ優先探索の関数を作成
 block dfs(int x, int y, std::vector<std::vector<char>> &map){
    std::stack<std::pair<int, int>> st;
@@ -98,33 +99,34 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
    std::vector<std::vector<char>> map(x_max, std::vector<char>(y_max));
    double threshold;
    std::vector<block> cluster;
+   Long64_t nentries;
+   UShort_t weight[128][128];
+
    if (fChain == 0) return;
 
-   Long64_t nentries = fChain->GetEntriesFast();
-
+   nentries = fChain->GetEntriesFast();
+   fChain->GetEntry(entry_num); 
    TH1D *h1 = new TH1D("h1", "1D Histogram;X;Entries", 100, 1000, 1500);
-   UShort_t weight[128][128];
-      fChain->GetEntry(entry_num); 
-      for(Long64_t i = x_min; i < x_max; i++){
-         for(Long64_t j = y_min; j < y_max; j++){
-            h1->Fill(ADC[i][j]);
-            weight[i][j] = ADC[i][j];
-         }
+   for(Long64_t i = x_min; i < x_max; i++){
+      for(Long64_t j = y_min; j < y_max; j++){
+         h1->Fill(ADC[i][j]);
+         weight[i][j] = ADC[i][j];
       }
-      //閾値の設定
-      threshold = h1->GetMean() + 3 * h1->GetStdDev(); 
-      std::cout << "閾値:" << threshold << std::endl;
+   }
+   //閾値の設定
+   threshold = h1->GetMean() + 3 * h1->GetStdDev(); 
+   std::cout << "閾値:" << threshold << std::endl;
 
-      create_map(map, weight, threshold, opt_sub);
-      std::cout << "クラスターカウント:" << call_dfs(map, cluster, weight, opt_sub) << std::endl;
-      if(!cluster.empty()){
+   create_map(map, weight, threshold, opt_sub);
+   std::cout << "クラスターカウント:" << call_dfs(map, cluster, weight, opt_sub) << std::endl;
+   if(!cluster.empty()){
       for(int i = 0; i < cluster.size(); i++){
          std::pair<double, double> ans = cluster[i].center_of_gravity(ADC);
          std::cout << "重心:" << ans.first << ", " << ans.second << std::endl;
          }
-      }
+   }
 
-   TH2D *h2 = new TH2D("h2", "2D Histogram;X;Y", 128, x_min, x_max, 128, y_min, y_max);
+   TH2D *h2 = new TH2D("h2", "2D Histogram;X;Y", (x_max - x_min) , x_min, x_max, (y_max - y_min), y_min, y_max);
    if(!opt_fit){
       for(int i = x_min; i < x_max; i++){
          for(int j = y_min; j < y_max; j++){
@@ -141,9 +143,15 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
          }
       }
    }
-   // ヒストグラムの色の範囲を固定
-   //h2->SetMinimum(1000); // 最小値を設定
-   //h2->SetMaximum(1500); // 最大値を設定
+   for (int i = 1; i <= h2->GetNbinsX(); ++i) { // X軸のビンをループ
+    for (int j = 1; j <= h2->GetNbinsY(); ++j) { // Y軸のビンをループ
+        double binContent = h2->GetBinContent(i, j); // ビンの内容を取得
+        if (binContent != 0) { // 非ゼロのビンを表示
+            std::cout << "Bin (" << i << ", " << j+55 << "): " << binContent << std::endl;
+        }
+    }
+}
+
    TCanvas *c1 = new TCanvas("c1", "2D Histogram", 650, 700);
    c1->Divide(1,2);
    c1->cd(1);
@@ -151,30 +159,23 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
    h2->Draw("COLZ");
    TBox *box = nullptr;
    if(opt_Red) highlight(weight, box, threshold, opt_sub);
-   if(!cluster.empty()) if(opt_fit) Gaus2D_fitting(cluster[0].get_xcenter(),cluster[0].get_ycenter(), h2);
+   //if(!cluster.empty() && opt_fit) Gaus2D_fitting(cluster[0].get_xcenter(),cluster[0].get_ycenter(), h2);
 
-   p.pointer_share(h1, h2, box, c1);
+   //p.pointer_share(h1, h2, box, c1);
    c1->cd(2);
 
-   TH1D *pj = (TH1D*)h2->ProfileX("T",0,-1,"o");
+   TH1D *pj = (TH1D*)h2->ProjectionX("T",0,-1,"o");
    // ガウスフィッティング
    TF1 *gaus = new TF1("gaus", "gaus", -5, 5);
    pj->Fit("gaus");
    double pvalue = gaus->GetProb();
    std::cout << "p-value: " << pvalue << std::endl; 
 
-   // フィット結果を取得
-   // double mean = gaus->GetParameter(1);
-   // double sigma = gaus->GetParameter(2);
-   // double chi2 = gaus->GetChisquare();
-   // int ndf = gaus->GetNDF();
-   // double pvalue = gaus->GetProb();
-   pj->Draw();
+   pj->Draw("HIST");
    gaus->Draw("SAME");
    c1->Update();
 }
 
-TFile *file = nullptr;
 /*Rootでこのコードを立ち上げたときはイベント数の引数を設定してこの関数を呼び出す。
 第一引数はeventのどこを参照するか選ぶ。第二引数は、クラスターの強調表示をするかを選ぶ。第三引数はペデスタルの減算するかを選ぶ。
 第四引数はフィッテイングするかを選ぶ。*/
@@ -206,3 +207,14 @@ void run_100(int start, bool opt_Red = false, bool opt_sub = false){
    }
 }
 
+
+// フィット結果を取得
+// double mean = gaus->GetParameter(1);
+// double sigma = gaus->GetParameter(2);
+// double chi2 = gaus->GetChisquare();
+// int ndf = gaus->GetNDF();
+// double pvalue = gaus->GetProb();
+
+// ヒストグラムの色の範囲を固定
+//h2->SetMinimum(1000); // 最小値を設定
+//h2->SetMaximum(1500); // 最大値を設定
