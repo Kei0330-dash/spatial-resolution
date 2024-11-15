@@ -28,7 +28,7 @@ void fit_gaussian_2D() {
     c1->cd(2);
     TH1D *pj = (TH1D*)h2->ProjectionX("T");
     pj->Fit("gaus");
-    pj->Draw();
+    pj->Draw("E");
     gaus->Draw("SAME");
 
     // 結果を保存

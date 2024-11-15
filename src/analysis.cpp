@@ -16,8 +16,8 @@
 #include <limits>
 #include <TF2.h>
 //2次元ヒストグラムの最小値から最大値
-const Int_t x_min = 0, x_max = 128,
-            y_min = 0, y_max = 128;
+const Int_t x_min = 50, x_max = 70,
+            y_min = 0, y_max = 20;
 //
 all_delete p;
 TFile *file = nullptr;
@@ -101,7 +101,7 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
    std::vector<block> cluster;
    Long64_t nentries;
    UShort_t weight[128][128];
-
+   double totalWeight = 0.0;
    if (fChain == 0) return;
 
    nentries = fChain->GetEntriesFast();
@@ -111,6 +111,7 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
       for(Long64_t j = y_min; j < y_max; j++){
          h1->Fill(ADC[i][j]);
          weight[i][j] = ADC[i][j];
+         totalWeight += weight[i][j];
       }
    }
    //閾値の設定
@@ -138,8 +139,10 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
    else{
       for(int i = x_min; i < x_max; i++){
          for(int j = y_min; j < y_max; j++){
-            if(weight[i][j])
+            if(weight[i][j]){
+               //double sqrtWeight = std::sqrt(weight[i][j]);
                h2->Fill(i, j, weight[i][j]);
+            }
          }
       }
    }
@@ -155,7 +158,7 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
    TCanvas *c1 = new TCanvas("c1", "2D Histogram", 650, 700);
    c1->Divide(1,2);
    c1->cd(1);
-   h2->SetStats(0);
+   //h2->SetStats(0);
    h2->Draw("COLZ");
    TBox *box = nullptr;
    if(opt_Red) highlight(weight, box, threshold, opt_sub);
@@ -171,7 +174,7 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
    double pvalue = gaus->GetProb();
    std::cout << "p-value: " << pvalue << std::endl; 
 
-   pj->Draw("HIST");
+   pj->Draw("");
    gaus->Draw("SAME");
    c1->Update();
 }
