@@ -111,7 +111,6 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
       for(Long64_t j = y_min; j < y_max; j++){
          h1->Fill(ADC[i][j]);
          weight[i][j] = ADC[i][j];
-         totalWeight += weight[i][j];
       }
    }
    //閾値の設定
@@ -140,8 +139,9 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
       for(int i = x_min; i < x_max; i++){
          for(int j = y_min; j < y_max; j++){
             if(weight[i][j]){
+               double normalizedWeight = weight[i][j] / totalWeight;
                //double sqrtWeight = std::sqrt(weight[i][j]);
-               h2->Fill(i, j, weight[i][j]);
+               h2->Fill(i, j, normalizedWeight);
             }
          }
       }
@@ -167,15 +167,16 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
    //p.pointer_share(h1, h2, box, c1);
    c1->cd(2);
 
-   TH1D *pj = (TH1D*)h2->ProjectionX("T",0,-1,"o");
+   TH1D *pj = (TH1D*)h2->ProjectionX();
    // ガウスフィッティング
    TF1 *gaus = new TF1("gaus", "gaus", -5, 5);
-   pj->Fit("gaus");
+
    double pvalue = gaus->GetProb();
    std::cout << "p-value: " << pvalue << std::endl; 
 
-   pj->Draw("");
-   gaus->Draw("SAME");
+   pj->Draw("hist");
+   pj->Fit("gaus");
+   gaus->Draw("");
    c1->Update();
 }
 
