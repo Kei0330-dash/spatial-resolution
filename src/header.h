@@ -1,5 +1,6 @@
 #ifndef header_root
 #define header_root
+
 #include "MyClass2.h"
 #include <TApplication.h>
 #include <TH2.h>
@@ -14,113 +15,106 @@
 #include <string>
 #include <limits>
 #include <TF2.h>
-class block : public virtual MyClass{
-   public:
-   bool flag = false;
-   std::set<std::pair<int, int>> place;
-   int Get_pixel_count();
-   double get_xcenter(){
-      return x_g;
-   };
-   double get_ycenter(){
-      return y_g;
-   };
-   double get_ADCsum(){
-      return ADCsum;
-   };
-   std::pair<double, double> center_of_gravity(UShort_t weight[128][128]);
-   void Print_NormalDistribution(UShort_t weight[128][128]);
-   private:
-   int i;
-   double x_g, y_g, ADCsum;
+
+class block : public virtual MyClass {
+public:
+    bool flag = false;
+    std::set<std::pair<int, int>> place;
+    inline int Get_pixel_count();
+    double get_xcenter() { return x_g; }
+    double get_ycenter() { return y_g; }
+    double get_ADCsum() { return ADCsum; }
+    inline std::pair<double, double> center_of_gravity(UShort_t weight[128][128]);
+    inline void Print_NormalDistribution(UShort_t weight[128][128]);
+
+private:
+    int i;
+    double x_g, y_g, ADCsum;
 };
-class all_delete{
-   private:
-      TH1D *h1 = nullptr;
-      TH2D *h2 = nullptr;
-      TBox *box = nullptr;
-      TCanvas *c1 = nullptr;
-   public:
-      void pointer_share(TH1D *s1 = nullptr, TH2D *s2 = nullptr, TBox *s3 = nullptr, TCanvas* s4 = nullptr);
-      void pointer_delete();
+
+class all_delete {
+private:
+    TH1D *h1 = nullptr;
+    TH2D *h2 = nullptr;
+    TBox *box = nullptr;
+    TCanvas *c1 = nullptr;
+
+public:
+    inline void pointer_share(TH1D *s1 = nullptr, TH2D *s2 = nullptr, TBox *s3 = nullptr, TCanvas* s4 = nullptr);
+    inline void pointer_delete();
 };
-//クラスターのピクセルの数を出力する。
-int block:: Get_pixel_count(){
-   return place.size();
-}
-//重心を計算して返り値としてpairのfirstにx軸の重心の値、secondにy軸の重心の値を返す
-std::pair<double, double> block::center_of_gravity(UShort_t weight[128][128]){ 
-   x_g = 0.0, y_g = 0.0, ADCsum = 0.0;
-   std::pair<double, double> res;
-      for(auto &a : place){
-         x_g += weight[a.first][a.second]* a.first;
-         y_g += weight[a.first][a.second]* a.second;
-         ADCsum += (double)weight[a.first][a.second];
-      }
-      std::cout << "ADC合計値:" << ADCsum << "\n";
-      x_g = x_g / ADCsum;
-      y_g = y_g / ADCsum;
-      res.first = x_g;
-      res.second = y_g;
-      return res;
-}
-//廃棄予定
-void block::Print_NormalDistribution(UShort_t weight[128][128]){
-   TCanvas c2("c2", "1D hist", 600, 500);
-   //TH1D* h1_X = h2->ProjectionX();
-   //TH1D* h1_Y = h2->ProjectionY();
-   //h1_X->Draw();
-   TH1D h1("h1", "1D Histogram;X;Entries", 100, 0, 1500);
-   for(auto &a : place){
-      h1.Fill(weight[a.first][a.second]);
-   }
-   h1.Draw();
-   c2.Update();
-   c2.WaitPrimitive();
+
+// クラスターのピクセルの数を出力する。
+inline int block::Get_pixel_count() {
+    return place.size();
 }
 
-//リニューアル後廃棄予定
-void all_delete :: pointer_share(TH1D *s1 = nullptr, TH2D *s2 = nullptr, TBox *s3 = nullptr, TCanvas* s4 = nullptr){
-   h1 = s1;
-   h2 = s2;
-   box = s3;
-   c1 = s4; 
-}
-//pointer_shareで共有した場所を全て消去するメンバ関数
-//リニューアル後デストラクタとなる予定
-void all_delete :: pointer_delete(){
-   if(h1) delete(h1);
-   if(h2) delete(h2);
-   if(box) delete(box);
-   if(c1) delete(c1);
-   h1 = nullptr;
-   h2 = nullptr;
-   box = nullptr;
-   c1 = nullptr;
+// 重心を計算して返り値として pair の first に x 軸の重心の値、second に y 軸の重心の値を返す。
+inline std::pair<double, double> block::center_of_gravity(UShort_t weight[128][128]) {
+    x_g = 0.0, y_g = 0.0, ADCsum = 0.0;
+    std::pair<double, double> res;
+    for (auto &a : place) {
+        x_g += weight[a.first][a.second] * a.first;
+        y_g += weight[a.first][a.second] * a.second;
+        ADCsum += static_cast<double>(weight[a.first][a.second]);
+    }
+    std::cout << "ADC合計値:" << ADCsum << "\n";
+    x_g = x_g / ADCsum;
+    y_g = y_g / ADCsum;
+    res.first = x_g;
+    res.second = y_g;
+    return res;
 }
 
-void MyClass::Gaus2D_fitting(double x_center, double y_center, TH2D* h2){
-   // 2次元ガウス関数を定義（重心を中心に）
-   TF2 *gaus2D = new TF2("gaus2D", "[0]*exp(-0.5*((x-[1])/[2])^2)*exp(-0.5*((y-[3])/[4])^2)");
-   gaus2D->SetParameters(1, x_center, 1, y_center, 1);
-   // フィット
-   h2->Fit("gaus2D");
-   // フィット結果を取得
-   double chi2 = gaus2D->GetChisquare();
-   int ndf = gaus2D->GetNDF();
-   double pvalue = gaus2D->GetProb();
-   // フィットパラメータとその不確かさを表示
-   for (int i = 0; i < 5; i++) {
-      double par = gaus2D->GetParameter(i);
-      double err = gaus2D->GetParError(i);
-      double lower = par - 1.96 * err;
-      double upper = par + 1.96 * err;
-      std::cout << "Parameter " << i << ": " << par << " ± " << err << " (95% CI: [" << lower << ", " << upper << "])" << std::endl;
-      }
-   // カイ二乗値、自由度、p値を表示
-   std::cout << "Chi2: " << chi2 << std::endl;
-   std::cout << "NDF: " << ndf << std::endl;
-   std::cout << "p-value: " << pvalue << std::endl;
+// 廃棄予定
+inline void block::Print_NormalDistribution(UShort_t weight[128][128]) {
+    TCanvas c2("c2", "1D hist", 600, 500);
+    TH1D h1("h1", "1D Histogram;X;Entries", 100, 0, 1500);
+    for (auto &a : place) {
+        h1.Fill(weight[a.first][a.second]);
+    }
+    h1.Draw();
+    c2.Update();
+    c2.WaitPrimitive();
 }
 
-#endif 
+// pointer_share で共有した場所を全て消去するメンバ関数。
+// リニューアル後デストラクタとなる予定。
+inline void all_delete::pointer_share(TH1D *s1, TH2D *s2, TBox *s3, TCanvas *s4) {
+    h1 = s1;
+    h2 = s2;
+    box = s3;
+    c1 = s4;
+}
+
+inline void all_delete::pointer_delete() {
+    if (h1) delete h1;
+    if (h2) delete h2;
+    if (box) delete box;
+    if (c1) delete c1;
+    h1 = nullptr;
+    h2 = nullptr;
+    box = nullptr;
+    c1 = nullptr;
+}
+
+inline void MyClass::Gaus2D_fitting(double x_center, double y_center, TH2D* h2) {
+    TF2 *gaus2D = new TF2("gaus2D", "[0]*exp(-0.5*((x-[1])/[2])^2)*exp(-0.5*((y-[3])/[4])^2)");
+    gaus2D->SetParameters(1, x_center, 1, y_center, 1);
+    h2->Fit("gaus2D");
+    double chi2 = gaus2D->GetChisquare();
+    int ndf = gaus2D->GetNDF();
+    double pvalue = gaus2D->GetProb();
+    for (int i = 0; i < 5; i++) {
+        double par = gaus2D->GetParameter(i);
+        double err = gaus2D->GetParError(i);
+        double lower = par - 1.96 * err;
+        double upper = par + 1.96 * err;
+        std::cout << "Parameter " << i << ": " << par << " ± " << err << " (95% CI: [" << lower << ", " << upper << "])" << std::endl;
+    }
+    std::cout << "Chi2: " << chi2 << std::endl;
+    std::cout << "NDF: " << ndf << std::endl;
+    std::cout << "p-value: " << pvalue << std::endl;
+}
+
+#endif

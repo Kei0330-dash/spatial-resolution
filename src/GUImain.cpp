@@ -2,6 +2,7 @@
 #define GUIMAIN_CXX
 
 #include "GUImain.h"
+#include "analysis.cpp"
 #include <TApplication.h>
 #include <TGClient.h>
 
@@ -35,7 +36,7 @@ MyMainFrame::~MyMainFrame() {
 }
 
 void MyMainFrame::HandleButton() {
-    printf("Text button was clicked!\n");
+    runMyClass(0,Get_Option_Red(),Get_Option_Substract(),Get_Option_Fitting());
 }
 
 void MyMainFrame::CloseWindow() {
