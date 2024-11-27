@@ -15,6 +15,7 @@
 #include <string>
 #include <limits>
 #include <TF2.h>
+#include <algorithm>
 //2次元ヒストグラムの最小値から最大値
 const Int_t x_min = 50, x_max = 70,
             y_min = 0, y_max = 20;
@@ -102,6 +103,8 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
    Long64_t nentries;
    UShort_t weight[128][128];
    double totalWeight = 0.0;
+   UShort_t maxWeight = 0;
+   UShort_t minWeight = 9999;
    if (fChain == 0) return;
 
    nentries = fChain->GetEntriesFast();
@@ -111,6 +114,7 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
       for(Long64_t j = y_min; j < y_max; j++){
          h1->Fill(ADC[i][j]);
          weight[i][j] = ADC[i][j];
+         totalWeight += weight[i][j];
       }
    }
    //閾値の設定
@@ -125,22 +129,31 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
          std::cout << "重心:" << ans.first << ", " << ans.second << std::endl;
          }
    }
-
+   for(int i = x_min; i < x_max; i++){
+      for(int j = y_min; j < y_max; j++){
+         if(weight[i][j]){
+            maxWeight = std::max(weight[i][j], maxWeight);
+            minWeight = std::min(weight[i][j], minWeight);
+         }
+      }
+   }
    TH2D *h2 = new TH2D("h2", "2D Histogram;X;Y", (x_max - x_min) , x_min, x_max, (y_max - y_min), y_min, y_max);
    if(!opt_fit){
       for(int i = x_min; i < x_max; i++){
          for(int j = y_min; j < y_max; j++){
-            if(weight[i][j])
+            if(weight[i][j]){
                h2->Fill(i, j, weight[i][j]);
+            }
          }
       }
    }
    else{
+      std::cout << maxWeight << "," << minWeight << std::endl;
       for(int i = x_min; i < x_max; i++){
          for(int j = y_min; j < y_max; j++){
             if(weight[i][j]){
-               double normalizedWeight = weight[i][j] / totalWeight;
-               //double sqrtWeight = std::sqrt(weight[i][j]);
+               double normalizedWeight = ((double)weight[i][j] - (double)minWeight) / ((double)maxWeight - (double)minWeight);
+               double sqrtWeight = std::sqrt(weight[i][j]);
                h2->Fill(i, j, normalizedWeight);
             }
          }
@@ -174,9 +187,9 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
    double pvalue = gaus->GetProb();
    std::cout << "p-value: " << pvalue << std::endl; 
 
-   pj->Draw("hist");
+   pj->Draw("");
    pj->Fit("gaus");
-   gaus->Draw("");
+   gaus->Draw("same");
    c1->Update();
 }
 

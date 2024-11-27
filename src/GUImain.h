@@ -1,0 +1,25 @@
+#ifndef GUIMAIN_H
+#define GUIMAIN_H
+
+#include <TGButton.h>
+#include <TGNumberEntry.h>
+
+class MyMainFrame : public TGMainFrame {
+public:
+    MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h);
+    virtual ~MyMainFrame();
+    void HandleButton();
+    void CloseWindow();
+    bool Get_Option_Red();
+    bool Get_Option_Substract();
+    bool Get_Option_Fitting();
+
+private:
+    TGCheckButton *Option_Red;
+    TGCheckButton *Option_Substract;
+    TGCheckButton *Option_Fitting;
+    TGTextButton *Run_analysis; 
+    ClassDef(MyMainFrame, 0);
+};
+
+#endif // GUI_H
