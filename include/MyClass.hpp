@@ -50,9 +50,9 @@ MyClass::MyClass(TTree *tree) : fChain(0)
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../DATA/SOFIST3_DATA_HV55V_chip1_alpha_240703.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/home/otokun241/newRepository/data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("../DATA/SOFIST3_DATA_HV55V_chip1_alpha_240703.root");
+         f = new TFile("/home/otokun241/newRepository/data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
       }
       f->GetObject("SOFIST_Data",tree);
 

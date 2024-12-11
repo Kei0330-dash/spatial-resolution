@@ -1,5 +1,5 @@
-#ifndef GUIMAIN_H
-#define GUIMAIN_H
+#ifndef GUIMAIN_HPP
+#define GUIMAIN_HPP
 
 #include <TGButton.h>
 #include <TGNumberEntry.h>

@@ -1,5 +1,5 @@
 #include "../include/GUImain.hpp"
-#include "analysis.cpp"
+#include "../include/analysis.hpp"
 #include <TApplication.h>
 #include <TGClient.h>
 

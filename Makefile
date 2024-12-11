@@ -4,29 +4,32 @@ CXXFLAGS = -std=c++11 $(shell root-config --cflags)
 LDFLAGS = $(shell root-config --glibs)
 
 # ソースファイルとオブジェクトファイル
-SOURCES = src/GUImain.cpp src/GUI_Dict.cpp
+SOURCES = src/GUImain.cpp build/GUI_Dict.cpp src/analysis.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
 # 実行ファイル
 EXECUTABLE = MyApp
+BUILD_DIR = build
 
 # デフォルトターゲット
-all: $(EXECUTABLE)
+all: $(BUILD_DIR)/$(EXECUTABLE)
 
 # 実行ファイルのビルド
-$(EXECUTABLE): $(OBJECTS)
-    $(CXX) -o $@ $^ $(LDFLAGS)
+$(BUILD_DIR)/$(EXECUTABLE): $(OBJECTS)
+	mkdir -p $(BUILD_DIR)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 # オブジェクトファイルのビルド
 %.o: %.cpp
-    $(CXX) -c -o $@ $< $(CXXFLAGS)
+	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 # rootclingで辞書ファイルを生成
-src/GUI_Dict.cpp: include/GUImain.hpp include/analysis.hpp include/LinkDef.hpp
-    rootcling -f $@ -c $^
+$(BUILD_DIR)/GUI_Dict.cpp: include/GUImain.hpp include/analysis.hpp include/LinkDef.hpp
+	rootcling -f $(BUILD_DIR)/GUI_Dict.cpp -c include/GUImain.hpp include/analysis.hpp include/LinkDef.hpp
 
 # クリーンアップ
 clean:
-    rm -f $(OBJECTS) $(EXECUTABLE) src/GUI_Dict.cpp
+	rm -f $(OBJECTS) $(BUILD_DIR)/$(EXECUTABLE) $(BUILD_DIR)/GUI_Dict.cpp
+	rmdir $(BUILD_DIR)
 
 .PHONY: all clean

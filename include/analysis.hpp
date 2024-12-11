@@ -24,8 +24,8 @@ public:
     double get_xcenter() { return x_g; }
     double get_ycenter() { return y_g; }
     double get_ADCsum() { return ADCsum; }
-    inline std::pair<double, double> center_of_gravity(UShort_t weight[128][128]);
-    inline void Print_NormalDistribution(UShort_t weight[128][128]);
+    inline std::pair<double, double> center_of_gravity(std::vector<std::vector<UShort_t>> &weight);
+    inline void Print_NormalDistribution(std::vector<std::vector<UShort_t>> &weight);
 
 private:
     int i;
@@ -50,7 +50,7 @@ inline int block::Get_pixel_count() {
 }
 
 // 重心を計算して返り値として pair の first に x 軸の重心の値、second に y 軸の重心の値を返す。
-inline std::pair<double, double> block::center_of_gravity(UShort_t weight[128][128]) {
+inline std::pair<double, double> block::center_of_gravity(std::vector<std::vector<UShort_t>> &weight) {
     x_g = 0.0, y_g = 0.0, ADCsum = 0.0;
     std::pair<double, double> res;
     for (auto &a : place) {
@@ -67,7 +67,7 @@ inline std::pair<double, double> block::center_of_gravity(UShort_t weight[128][1
 }
 
 // 廃棄予定
-inline void block::Print_NormalDistribution(UShort_t weight[128][128]) {
+inline void block::Print_NormalDistribution(std::vector<std::vector<UShort_t>> &weight) {
     TCanvas c2("c2", "1D hist", 600, 500);
     TH1D h1("h1", "1D Histogram;X;Entries", 100, 0, 1500);
     for (auto &a : place) {
@@ -117,4 +117,19 @@ inline void MyClass::Gaus2D_fitting(double x_center, double y_center, TH2D* h2) 
     std::cout << "p-value: " << pvalue << std::endl;
 }
 
+block dfs(int x, int y, std::vector<std::vector<char>> &map);
+
+void create_1Dhist(TH1D* &h1, std::vector<std::vector<UShort_t>> &weight, UShort_t ADC[256][128]);
+
+void create_map(std::vector<std::vector<char>> &map, std::vector<std::vector<UShort_t>> &weight, double threshold, bool opt_sub);
+
+int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, std::vector<std::vector<UShort_t>> &weight, bool opt_sub);
+
+void highlight(std::vector<std::vector<UShort_t>> &weight, TBox* &box, double threshold, bool opt_sub);
+
+void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false);
+
+void closefile();
+
+void run_100(int start, bool opt_Red = false, bool opt_sub = false);
 #endif

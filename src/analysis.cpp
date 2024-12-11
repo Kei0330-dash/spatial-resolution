@@ -58,7 +58,7 @@ void create_1Dhist(TH1D* &h1, std::vector<std::vector<UShort_t>> &weight, UShort
    }
 }
 
-void create_map(std::vector<std::vector<char>> &map, std::vector<std::vector<UShort_t>> weight, double threshold, bool opt_sub){
+void create_map(std::vector<std::vector<char>> &map, std::vector<std::vector<UShort_t>> &weight, double threshold, bool opt_sub){
    for(Long64_t i = x_min; i < x_max; i++){
       for(Long64_t j = y_min; j < y_max; j++){
          if((UShort_t)threshold < weight[i][j]){
@@ -75,7 +75,7 @@ void create_map(std::vector<std::vector<char>> &map, std::vector<std::vector<USh
    }
 }
 
-int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, std::vector<std::vector<UShort_t>> weight, bool opt_sub){
+int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, std::vector<std::vector<UShort_t>> &weight, bool opt_sub){
    int count = 0;
    for(int i = x_min; i < x_max; i++){
       for(int j = y_min; j < y_max; j++){
@@ -90,7 +90,7 @@ int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, s
    return count;
 }
 
-void highlight(std::vector<std::vector<UShort_t>> weight, TBox* &box, double threshold, bool opt_sub){
+void highlight(std::vector<std::vector<UShort_t>> &weight, TBox* &box, double threshold, bool opt_sub){
    for(Long64_t i = x_min; i < x_max; i++){
       for(Long64_t j = y_min; j < y_max; j++){
          if(0 < weight[i][j] && opt_sub ||(u_short)threshold < weight[i][j]){
@@ -128,7 +128,7 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
    std::cout << "クラスターカウント:" << call_dfs(map, cluster, weight, opt_sub) << std::endl;
    if(!cluster.empty()){
       for(int i = 0; i < cluster.size(); i++){
-         std::pair<double, double> ans = cluster[i].center_of_gravity(ADC);
+         std::pair<double, double> ans = cluster[i].center_of_gravity(weight);
          std::cout << "重心:" << ans.first << ", " << ans.second << std::endl;
          }
    }
@@ -162,14 +162,14 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
          }
       }
    }
-   for (int i = 1; i <= h2->GetNbinsX(); ++i) { // X軸のビンをループ
-    for (int j = 1; j <= h2->GetNbinsY(); ++j) { // Y軸のビンをループ
-        double binContent = h2->GetBinContent(i, j); // ビンの内容を取得
-        if (binContent != 0) { // 非ゼロのビンを表示
-            std::cout << "Bin (" << i << ", " << j+55 << "): " << binContent << std::endl;
-        }
-    }
-}
+//    for (int i = 1; i <= h2->GetNbinsX(); ++i) { // X軸のビンをループ
+//     for (int j = 1; j <= h2->GetNbinsY(); ++j) { // Y軸のビンをループ
+//         double binContent = h2->GetBinContent(i, j); // ビンの内容を取得
+//         if (binContent != 0) { // 非ゼロのビンを表示
+//             std::cout << "Bin (" << i << ", " << j+55 << "): " << binContent << std::endl;
+//         }
+//     }
+// }
 
    TCanvas *c1 = new TCanvas("c1", "2D Histogram", 650, 700);
    c1->Divide(1,2);
@@ -210,11 +210,11 @@ void MyClass::AutoCluster(){
 /*Rootでこのコードを立ち上げたときはイベント数の引数を設定してこの関数を呼び出す。
 第一引数はeventのどこを参照するか選ぶ。第二引数は、クラスターの強調表示をするかを選ぶ。第三引数はペデスタルの減算するかを選ぶ。
 第四引数はフィッテイングするかを選ぶ。*/
-void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false) {
+void runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit) {
    MyClass *myobj = nullptr;
    p.pointer_delete(); // 共有ポインタの解放
    if(!file){
-      file = TFile::Open("../data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
+      file = TFile::Open("/home/otokun241/newRepository/data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
       if (!file || file->IsZombie()) {
          std::cerr << "Error opening file" << std::endl;
          return;
@@ -232,7 +232,7 @@ void closefile(){
    file = nullptr;
 }
 
-void run_100(int start, bool opt_Red = false, bool opt_sub = false){
+void run_100(int start, bool opt_Red, bool opt_sub){
    for(int i = start; i < start + 100; i++){
       runMyClass(i, opt_Red, opt_sub, false);
    }
