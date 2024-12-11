@@ -1,7 +1,4 @@
-#ifndef GUIMAIN_CXX
-#define GUIMAIN_CXX
-
-#include "GUImain.h"
+#include "../include/GUImain.hpp"
 #include "analysis.cpp"
 #include <TApplication.h>
 #include <TGClient.h>
@@ -9,7 +6,7 @@
 MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) 
     : TGMainFrame(p, w, h) {
     TGCompositeFrame *frame = new TGCompositeFrame(this, 200, 200);
-    TGNumberEntry *numEntry = new TGNumberEntry(frame, 0, 9, -1, TGNumberFormat::kNESInteger);
+    numEntry = new TGNumberEntry(frame, 0, 9, -1, TGNumberFormat::kNESInteger);
     frame->AddFrame(numEntry, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
 
     Option_Red = new TGCheckButton(this, "Option_Red");
@@ -27,7 +24,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
 
     SetWindowName("Settings screen");
     MapSubwindows();
-    Resize(GetDefaultSize());
+    // Resize(GetDefaultSize());
     MapWindow();
 }
 
@@ -36,11 +33,15 @@ MyMainFrame::~MyMainFrame() {
 }
 
 void MyMainFrame::HandleButton() {
-    runMyClass(0,Get_Option_Red(),Get_Option_Substract(),Get_Option_Fitting());
+    runMyClass(Get_Entry_num(), Get_Option_Red(), Get_Option_Substract(), Get_Option_Fitting());
 }
 
 void MyMainFrame::CloseWindow() {
     gApplication->Terminate(0);
+}
+
+int MyMainFrame::Get_Entry_num(){
+    return numEntry->GetIntNumber();
 }
 
 bool MyMainFrame::Get_Option_Red() {
@@ -57,9 +58,8 @@ bool MyMainFrame::Get_Option_Fitting() {
 
 int main(int argc, char **argv) {
     TApplication app("app", &argc, argv);
-    MyMainFrame *mainFrame = new MyMainFrame(gClient->GetRoot(), 800, 600);
+    MyMainFrame *mainFrame = new MyMainFrame(gClient->GetRoot(), 400, 400);
     app.Run();
     delete mainFrame;
     return 0;
 }
-#endif

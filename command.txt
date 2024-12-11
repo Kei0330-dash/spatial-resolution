@@ -1,0 +1,10 @@
+以下の手順でコードをコンパイルする。
+rootcling -f GUI_Dict.cxx -c GUImain.h header.h LinkDef.h
+g++ -o myApp GUImain.cpp GUI_Dict.cxx `root-config --cflags --glibs`
+
+$ rootcling -f GUI_Dict.cpp -c ../include/GUImain.h ../include/analysis.h ../include/LinkDef.h
+$ g++ -o ../build/myApp GUImain.cpp GUI_Dict.cpp `root-config --cflags --glibs`
+
+otokun241@Otokun241:~/newRepository$ rootcling -f ./src/GUI_Dict.cpp -c ./include/GUImain.h ./include/analysis.h ./include/LinkDef.h
+otokun241@Otokun241:~/newRepository$ g++ -o ./build/myApp ./src/GUImain.cpp ./src/GUI_Dict.cpp `root-config --cflags --glibs`
+otokun241@Otokun241:~/newRepository$ ./build/myApp 

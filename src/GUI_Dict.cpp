@@ -1,6 +1,6 @@
 // Do NOT change. Changes will be lost next time file is generated
 
-#define R__DICTIONARY_FILENAME GUI_Dict
+#define R__DICTIONARY_FILENAME dOdIsrcdIGUI_Dict
 #define R__NO_DEPRECATION
 
 /*******************************************************************/
@@ -35,8 +35,9 @@
 #include "TDataMember.h"
 
 // Header files passed as explicit arguments
-#include "GUImain.h"
-#include "header.h"
+#include "./include/GUImain.h"
+#include "./include/analysis.h"
+#include "./include/MyClass.h"
 
 // Header files passed via #pragma extra_include
 
@@ -54,7 +55,7 @@ namespace ROOT {
       ::MyMainFrame *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::MyMainFrame >(nullptr);
       static ::ROOT::TGenericClassInfo 
-         instance("MyMainFrame", ::MyMainFrame::Class_Version(), "GUImain.h", 7,
+         instance("MyMainFrame", ::MyMainFrame::Class_Version(), "include/GUImain.h", 7,
                   typeid(::MyMainFrame), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &::MyMainFrame::Dictionary, isa_proxy, 4,
                   sizeof(::MyMainFrame) );
@@ -135,13 +136,14 @@ namespace ROOT {
 namespace {
   void TriggerDictionaryInitialization_GUI_Dict_Impl() {
     static const char* headers[] = {
-"GUImain.h",
-"header.h",
+"./include/GUImain.h",
+"./include/analysis.h",
+"./include/MyClass.h",
 nullptr
     };
     static const char* includePaths[] = {
 "/usr/local/root/include/",
-"/home/otokun241/newRepository/src/",
+"/home/otokun241/newRepository/",
 nullptr
     };
     static const char* fwdDeclCode = R"DICTFWDDCLS(
@@ -150,7 +152,7 @@ nullptr
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 extern int __Cling_AutoLoading_Map;
-class __attribute__((annotate("$clingAutoload$GUImain.h")))  MyMainFrame;
+class __attribute__((annotate("$clingAutoload$./include/GUImain.h")))  MyMainFrame;
 )DICTFWDDCLS";
     static const char* payloadCode = R"DICTPAYLOAD(
 #line 1 "GUI_Dict dictionary payload"
@@ -158,8 +160,9 @@ class __attribute__((annotate("$clingAutoload$GUImain.h")))  MyMainFrame;
 
 #define _BACKWARD_BACKWARD_WARNING_H
 // Inline headers
-#include "GUImain.h"
-#include "header.h"
+#include "./include/GUImain.h"
+#include "./include/analysis.h"
+#include "./include/MyClass.h"
 
 #undef  _BACKWARD_BACKWARD_WARNING_H
 )DICTPAYLOAD";

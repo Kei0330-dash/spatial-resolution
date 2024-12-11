@@ -10,11 +10,13 @@ public:
     virtual ~MyMainFrame();
     void HandleButton();
     void CloseWindow();
+    int Get_Entry_num();
     bool Get_Option_Red();
     bool Get_Option_Substract();
     bool Get_Option_Fitting();
 
 private:
+    TGNumberEntry *numEntry;
     TGCheckButton *Option_Red;
     TGCheckButton *Option_Substract;
     TGCheckButton *Option_Fitting;

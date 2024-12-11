@@ -1,7 +1,7 @@
 /*平均値+3σを閾値とした、クラスターを探すプログラムに加えその他諸々一杯機能が詰まったプログラム*/
 #define MyClass_cxx
-#include "MyClass2.h"
-#include "header.h"
+#include "../include/MyClass.hpp"
+#include "../include/analysis.hpp"
 #include <TApplication.h>
 #include <TH2.h>
 #include <TStyle.h>
@@ -17,8 +17,8 @@
 #include <TF2.h>
 #include <algorithm>
 //2次元ヒストグラムの最小値から最大値
-const Int_t x_min = 50, x_max = 70,
-            y_min = 0, y_max = 20;
+const Int_t x_min = 0, x_max = 128,
+            y_min = 0, y_max = 128;
 //
 all_delete p;
 TFile *file = nullptr;
@@ -49,13 +49,22 @@ block dfs(int x, int y, std::vector<std::vector<char>> &map){
    return cluster;
 }
 
-void create_map(std::vector<std::vector<char>> &map, UShort_t weight[128][128], double threshold, bool opt_sub){
+void create_1Dhist(TH1D* &h1, std::vector<std::vector<UShort_t>> &weight, UShort_t ADC[256][128]){
    for(Long64_t i = x_min; i < x_max; i++){
       for(Long64_t j = y_min; j < y_max; j++){
-         if((u_short)threshold < weight[i][j]){
+         h1->Fill(ADC[i][j]);
+         weight[i][j] = ADC[i][j];
+      }
+   }
+}
+
+void create_map(std::vector<std::vector<char>> &map, std::vector<std::vector<UShort_t>> weight, double threshold, bool opt_sub){
+   for(Long64_t i = x_min; i < x_max; i++){
+      for(Long64_t j = y_min; j < y_max; j++){
+         if((UShort_t)threshold < weight[i][j]){
             map[i][j] = 'W';
             if(opt_sub) 
-               weight[i][j] -= (u_short)threshold;
+               weight[i][j] -= (UShort_t)threshold;
          }
          else{ 
             map[i][j] = '.';
@@ -66,7 +75,7 @@ void create_map(std::vector<std::vector<char>> &map, UShort_t weight[128][128], 
    }
 }
 
-int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, UShort_t weight[128][128], bool opt_sub){
+int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, std::vector<std::vector<UShort_t>> weight, bool opt_sub){
    int count = 0;
    for(int i = x_min; i < x_max; i++){
       for(int j = y_min; j < y_max; j++){
@@ -81,7 +90,7 @@ int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, U
    return count;
 }
 
-void highlight(UShort_t weight[128][128], TBox* &box, double threshold, bool opt_sub){
+void highlight(std::vector<std::vector<UShort_t>> weight, TBox* &box, double threshold, bool opt_sub){
    for(Long64_t i = x_min; i < x_max; i++){
       for(Long64_t j = y_min; j < y_max; j++){
          if(0 < weight[i][j] && opt_sub ||(u_short)threshold < weight[i][j]){
@@ -101,7 +110,7 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
    double threshold;
    std::vector<block> cluster;
    Long64_t nentries;
-   UShort_t weight[128][128];
+   std::vector<std::vector<UShort_t>> weight(128, std::vector<UShort_t>(128));
    double totalWeight = 0.0;
    UShort_t maxWeight = 0;
    UShort_t minWeight = 9999;
@@ -110,13 +119,7 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
    nentries = fChain->GetEntriesFast();
    fChain->GetEntry(entry_num); 
    TH1D *h1 = new TH1D("h1", "1D Histogram;X;Entries", 100, 1000, 1500);
-   for(Long64_t i = x_min; i < x_max; i++){
-      for(Long64_t j = y_min; j < y_max; j++){
-         h1->Fill(ADC[i][j]);
-         weight[i][j] = ADC[i][j];
-         totalWeight += weight[i][j];
-      }
-   }
+   create_1Dhist(h1, weight, ADC);
    //閾値の設定
    threshold = h1->GetMean() + 3 * h1->GetStdDev(); 
    std::cout << "閾値:" << threshold << std::endl;
@@ -193,6 +196,17 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
    c1->Update();
 }
 
+void MyClass::AutoCluster(){
+   //使用する変数。
+   std::vector<std::vector<char>> map(x_max, std::vector<char>(y_max));
+   double threshold;
+   std::vector<block> cluster;
+   Long64_t nentries;
+   std::vector<std::vector<UShort_t>> weight(128, std::vector<UShort_t>(128));
+   for(int entry_num = 0; entry_num < 1000; entry_num++){
+
+   }
+}
 /*Rootでこのコードを立ち上げたときはイベント数の引数を設定してこの関数を呼び出す。
 第一引数はeventのどこを参照するか選ぶ。第二引数は、クラスターの強調表示をするかを選ぶ。第三引数はペデスタルの減算するかを選ぶ。
 第四引数はフィッテイングするかを選ぶ。*/
@@ -200,7 +214,7 @@ void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, boo
    MyClass *myobj = nullptr;
    p.pointer_delete(); // 共有ポインタの解放
    if(!file){
-      file = TFile::Open("../DATA/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
+      file = TFile::Open("../data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
       if (!file || file->IsZombie()) {
          std::cerr << "Error opening file" << std::endl;
          return;

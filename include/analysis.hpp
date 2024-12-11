@@ -1,7 +1,7 @@
 #ifndef header_root
 #define header_root
 
-#include "MyClass2.h"
+#include "MyClass.hpp"
 #include <TApplication.h>
 #include <TH2.h>
 #include <TStyle.h>

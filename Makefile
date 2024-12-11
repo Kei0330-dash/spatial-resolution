@@ -1,26 +1,32 @@
-# ROOTの設定を取得
-ROOTCFLAGS   := $(shell root-config --cflags)
-ROOTLIBS     := $(shell root-config --libs)
-ROOTGLIBS    := $(shell root-config --glibs)
+# コンパイラとオプション
+CXX = g++
+CXXFLAGS = -std=c++11 $(shell root-config --cflags)
+LDFLAGS = $(shell root-config --glibs)
 
-# コンパイルするファイル
-SOURCES      := GUImain.cpp
-OBJECTS      := $(SOURCES:.cpp=.o)
-EXECUTABLE   := GUImain
+# ソースファイルとオブジェクトファイル
+SOURCES = src/GUImain.cpp src/GUI_Dict.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
 
-# コンパイラの設定
-CXX          := g++
-CXXFLAGS     := -O2 -Wall $(ROOTCFLAGS)
-LDFLAGS      := $(ROOTLIBS)
+# 実行ファイル
+EXECUTABLE = MyApp
 
-# ターゲットの規則
+# デフォルトターゲット
 all: $(EXECUTABLE)
 
+# 実行ファイルのビルド
 $(EXECUTABLE): $(OBJECTS)
-    $(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+    $(CXX) -o $@ $^ $(LDFLAGS)
 
+# オブジェクトファイルのビルド
 %.o: %.cpp
-    $(CXX) $(CXXFLAGS) -c $< -o $@
+    $(CXX) -c -o $@ $< $(CXXFLAGS)
 
+# rootclingで辞書ファイルを生成
+src/GUI_Dict.cpp: include/GUImain.hpp include/analysis.hpp include/LinkDef.hpp
+    rootcling -f $@ -c $^
+
+# クリーンアップ
 clean:
-    rm -f $(OBJECTS) $(EXECUTABLE)
+    rm -f $(OBJECTS) $(EXECUTABLE) src/GUI_Dict.cpp
+
+.PHONY: all clean
