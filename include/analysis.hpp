@@ -127,7 +127,7 @@ int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, s
 
 void highlight(std::vector<std::vector<UShort_t>> &weight, TBox* &box, double threshold, bool opt_sub);
 
-void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false);
+void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false, bool opt_AutoCluster = false);
 
 void closefile();
 

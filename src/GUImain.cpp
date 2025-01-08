@@ -33,7 +33,7 @@ MyMainFrame::~MyMainFrame() {
 }
 
 void MyMainFrame::HandleButton() {
-    runMyClass(Get_Entry_num(), Get_Option_Red(), Get_Option_Substract(), Get_Option_Fitting());
+    runMyClass(Get_Entry_num(), Get_Option_Red(), Get_Option_Substract(), Get_Option_Fitting(), false);
 }
 
 void MyMainFrame::CloseWindow() {

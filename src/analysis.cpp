@@ -143,6 +143,7 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 		}
 	}
 	TH2D *h2 = new TH2D("h2", "2D Histogram;X;Y", (x_max - x_min) , x_min, x_max, (y_max - y_min), y_min, y_max);
+	h2->Sumw2();
 	if(!opt_fit){
 		for(int i = x_min; i < x_max; i++){
 			for(int j = y_min; j < y_max; j++){
@@ -164,8 +165,8 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 				}
 			}
 		}
-		TH2D *aa;
-		aa->Sumw2();
+		// TH2D *aa;
+		// aa->Sumw2();
 	TH1D *pj = (TH1D*)h2->ProjectionX();
 	// Z-Score Standarization	
 	// int nbins = pj->GetNbinsX();
@@ -196,22 +197,23 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 	double pvalue = gaus->GetProb();
 	std::cout << "p-value: " << pvalue << std::endl; 
 
-	pj->Draw("");
+	pj->Draw("same");
 	pj->Fit("gaus");
 	gaus->Draw("same");
 	c1->Update();
 }
 
-void MyClass::Find_AutoCluster(){
+std::vector<int> MyClass::Find_AutoCluster(){
 	//使用する変数。
 	std::vector<std::vector<char>> map(x_max, std::vector<char>(y_max));
 	double threshold;
 	std::vector<block> cluster;
 	Long64_t nentries;
 	std::vector<std::vector<UShort_t>> weight(128, std::vector<UShort_t>(128));
-
+	//クラスターがあるエントリーナンバーを全て返す
+	std::vector<int> res;
 	// エントリー数の数だけ、走査
-	if (fChain == nullptr) return;
+	// if (fChain == nullptr) return res;
 	nentries = fChain->GetEntries();
 	for(int entry_num = 0; entry_num < nentries; entry_num++){
 		fChain->GetEntry(entry_num);
@@ -219,14 +221,21 @@ void MyClass::Find_AutoCluster(){
 		create_1Dhist(h1, weight, ADC);
 		//閾値の設定
 		threshold = h1->GetMean() + 3 * h1->GetStdDev(); 
-		create_map(map, weight, threshold, false);
+		create_map(map, weight, threshold, true);
+
+		int ans = call_dfs(map, cluster, weight, true);
+
+		if(ans <= 1){
+			res.push_back(entry_num);
+		}
 	}
+	return res;
 }
 
 /*Rootでこのコードを立ち上げたときはイベント数の引数を設定してこの関数を呼び出す。
 第一引数はeventのどこを参照するか選ぶ。第二引数は、クラスターの強調表示をするかを選ぶ。第三引数はペデスタルの減算するかを選ぶ。
 第四引数はフィッテイングするかを選ぶ。*/
-void runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit) {
+void runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit, bool opt_AutoCluster) {
    MyClass *myobj = nullptr;
    p.pointer_delete(); // 共有ポインタの解放
    if(!file){
