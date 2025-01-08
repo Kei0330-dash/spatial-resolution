@@ -17,8 +17,8 @@
 #include <TF2.h>
 #include <algorithm>
 //2次元ヒストグラムの最小値から最大値
-const Int_t x_min = 50, x_max = 70,
-            y_min = 0, y_max = 20;
+const Int_t x_min = 0, x_max = 128,
+            y_min = 0, y_max = 128;
 //
 all_delete p;
 TFile *file = nullptr;
@@ -122,6 +122,9 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 
 	TH1D *h1 = new TH1D("h1", "1D Histogram;X;Entries", 100, 1000, 1500);
 	create_1Dhist(h1, weight, ADC);
+	TCanvas *c2 = new TCanvas("c2", "1D Histogram", 600, 400);
+	h1->Draw();
+	c2->Update();
 	//閾値の設定
 	threshold = h1->GetMean() + 3 * h1->GetStdDev(); 
 	std::cout << "閾値:" << threshold << std::endl;
@@ -178,29 +181,42 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 	// 	pj->SetBinContent(i, normalizedValue);
 	// }
 
+	if(opt_fit){
+		TCanvas *c1 = new TCanvas("c1", "2D Histogram", 650, 700);
+		c1->Divide(1,2);
+		//subplot1
+		c1->cd(1);
+		//h2->SetStats(0);
+		h2->Draw("COLZ");
+		TBox *box = nullptr;
+		if(opt_Red) highlight(weight, box, threshold, opt_sub);
+		p.pointer_share(h1, h2, box, c1);
 
-	TCanvas *c1 = new TCanvas("c1", "2D Histogram", 650, 700);
-	c1->Divide(1,2);
-	c1->cd(1);
-	//h2->SetStats(0);
-	h2->Draw("COLZ");
-	TBox *box = nullptr;
-	if(opt_Red) highlight(weight, box, threshold, opt_sub);
+		//subplot2
+		c1->cd(2);
+		// ガウスフィッティング
+		TF1 *gaus = new TF1("gaus", "gaus", -5, 5);
 
-	p.pointer_share(h1, h2, box, c1);
-	c1->cd(2);
+		double pvalue = gaus->GetProb();
+		std::cout << "p-value: " << pvalue << std::endl; 
 
+		pj->Draw("same");
+		pj->Fit("gaus");
+		gaus->Draw("same");
+		c1->Update();
+	}
+	
+	else{
+		TCanvas *c1 = new TCanvas("c1", "2D Histogram", 650, 400);
+		//h2->SetStats(0);
+		h2->Draw("COLZ");
+		TBox *box = nullptr;
+		if(opt_Red) highlight(weight, box, threshold, opt_sub);
+		p.pointer_share(h1, h2, box, c1);
+		h2->Draw();
+		c1->Update();
+	}
 
-	// ガウスフィッティング
-	TF1 *gaus = new TF1("gaus", "gaus", -5, 5);
-
-	double pvalue = gaus->GetProb();
-	std::cout << "p-value: " << pvalue << std::endl; 
-
-	pj->Draw("same");
-	pj->Fit("gaus");
-	gaus->Draw("same");
-	c1->Update();
 }
 
 std::vector<int> MyClass::Find_AutoCluster(){
@@ -235,11 +251,11 @@ std::vector<int> MyClass::Find_AutoCluster(){
 /*Rootでこのコードを立ち上げたときはイベント数の引数を設定してこの関数を呼び出す。
 第一引数はeventのどこを参照するか選ぶ。第二引数は、クラスターの強調表示をするかを選ぶ。第三引数はペデスタルの減算するかを選ぶ。
 第四引数はフィッテイングするかを選ぶ。*/
-void runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit, bool opt_AutoCluster) {
+void runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit, bool opt_AutoCluster, TString path) {
    MyClass *myobj = nullptr;
    p.pointer_delete(); // 共有ポインタの解放
    if(!file){
-      file = TFile::Open("/home/otokun241/newRepository/data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
+      file = TFile::Open(path);
       if (!file || file->IsZombie()) {
          std::cerr << "Error opening file" << std::endl;
          return;

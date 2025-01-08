@@ -15,21 +15,28 @@
 #include <string>
 #include <limits>
 #include <TF2.h>
+#include <algorithm>
 
 class block : public virtual MyClass {
 public:
     bool flag = false;
     std::set<std::pair<int, int>> place;
     inline int Get_pixel_count();
-    double get_xcenter() { return x_g; }
-    double get_ycenter() { return y_g; }
-    double get_ADCsum() { return ADCsum; }
+    double Get_xcenter() { return x_g; }
+    double Get_ycenter() { return y_g; }
+    double Get_ADCsum() { return ADCsum; }
+	double Get_xmin() { return x_min; }
+	double Get_xmax() { return x_max; }
+	double Get_ymin() { return y_min; }
+	double Get_ymax() { return y_max; }
     inline std::pair<double, double> center_of_gravity(std::vector<std::vector<UShort_t>> &weight);
+	inline void Calc_min_max();
     inline void Print_NormalDistribution(std::vector<std::vector<UShort_t>> &weight);
 
 private:
     int i;
     double x_g, y_g, ADCsum;
+	int x_min = 0, x_max = 128, y_min = 0, y_max = 128;
 };
 
 class all_delete {
@@ -64,6 +71,16 @@ inline std::pair<double, double> block::center_of_gravity(std::vector<std::vecto
     res.first = x_g;
     res.second = y_g;
     return res;
+}
+
+// 最大値と最小値を計算する。
+inline void block::Calc_min_max() {
+	for (auto &a : place) {
+		x_min = std::min(x_min, a.first);
+		x_max = std::max(x_max, a.first);
+		y_min = std::min(y_min, a.second);
+		y_max = std::max(y_max, a.second);
+	}
 }
 
 // 廃棄予定
@@ -127,7 +144,7 @@ int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, s
 
 void highlight(std::vector<std::vector<UShort_t>> &weight, TBox* &box, double threshold, bool opt_sub);
 
-void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false, bool opt_AutoCluster = false);
+void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false, bool opt_AutoCluster = false, TString path = "/home/otokun241/newRepository/data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
 
 void closefile();
 
