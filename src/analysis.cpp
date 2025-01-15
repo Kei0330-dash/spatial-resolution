@@ -22,7 +22,7 @@ const Int_t x_min = 0, x_max = 128,
 //
 all_delete p;
 TFile *file = nullptr;
-//深さ優先探索の関数を作成
+
 block dfs(int x, int y, std::vector<std::vector<char>> &map){
 	std::stack<std::pair<int, int>> st;
 	st.push({x, y});
@@ -39,21 +39,20 @@ block dfs(int x, int y, std::vector<std::vector<char>> &map){
 				int nx = cx + dx, ny = cy + dy;
 				//2次元で作成したmapが範囲外でないときかつmapの値がWであればその座標でstackにpushする。
 				if(x_min <= nx && nx < x_max && y_min <= ny && ny < y_max && map[nx][ny] == 'W'){
-				cluster.flag = true;
-				cluster.place.insert({nx, ny});
-				st.push({nx, ny});
-				}
+					cluster.flag = true;
+					cluster.place.insert({nx, ny});
+					st.push({nx, ny});
 				}
 			}
 		}
+	}
 	return cluster;
 }
 
-void create_1Dhist(TH1D* &h1, std::vector<std::vector<UShort_t>> &weight, UShort_t ADC[256][128]){
+void Fill_1Dhist(TH1D* &h1, std::vector<std::vector<UShort_t>> &weight){
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
-			h1->Fill(ADC[i][j]);
-			weight[i][j] = ADC[i][j];
+			h1->Fill(weight[i][j]);
 		}
 	}
 }
@@ -105,147 +104,185 @@ void highlight(std::vector<std::vector<UShort_t>> &weight, TBox* &box, double th
 }
 
 void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
-	//使用する変数。
-	std::vector<std::vector<char>> map(x_max, std::vector<char>(y_max));
-	double threshold;
-	std::vector<block> cluster;
-	Long64_t nentries;
-	std::vector<std::vector<UShort_t>> weight(128, std::vector<UShort_t>(128));
-	double totalWeight = 0.0;
-	UShort_t maxWeight = 0;
-	UShort_t minWeight = 9999;
+	// //使用する変数。
+	// std::vector<std::vector<char>> map(x_max, std::vector<char>(y_max));
+	// double threshold;
+	// std::vector<block> cluster;
+	// Long64_t nentries;
+	// std::vector<std::vector<UShort_t>> weight(128, std::vector<UShort_t>(128));
+	// double totalWeight = 0.0;
+	// UShort_t maxWeight = 0;
+	// UShort_t minWeight = 9999;
 	
+	// //エントリー数を指定する
+	// if (fChain == nullptr) return;
+	// nentries = fChain->GetEntriesFast();
+	// fChain->GetEntry(entry_num);
+
+	// TH1D *h1 = new TH1D("h1", "1D Histogram;X;Entries", 100, 1000, 1500);
+	// create_1Dhist(h1, weight, ADC);
+	// TCanvas *c2 = new TCanvas("c2", "1D Histogram", 600, 400);
+	// h1->Draw();
+	// c2->Update();
+	// //閾値の設定
+	// threshold = h1->GetMean() + 3 * h1->GetStdDev(); 
+	// std::cout << "閾値:" << threshold << std::endl;
+
+	// create_map(map, weight, threshold, opt_sub);
+	// std::cout << "クラスターカウント:" << call_dfs(map, cluster, weight, opt_sub) << std::endl;
+	// if(!cluster.empty()){
+	// 	for(int i = 0; i < cluster.size(); i++){
+	// 		std::pair<double, double> ans = cluster[i].center_of_gravity(weight);
+	// 		std::cout << "重心:" << ans.first << ", " << ans.second << std::endl;
+	// 		}
+	// }
+	// for(int i = x_min; i < x_max; i++){
+	// 	for(int j = y_min; j < y_max; j++){
+	// 		if(weight[i][j]){
+	// 			maxWeight = std::max(weight[i][j], maxWeight);
+	// 			minWeight = std::min(weight[i][j], minWeight);
+	// 		}
+	// 	}
+	// }
+	// TH2D *h2 = new TH2D("h2", "2D Histogram;X;Y", (x_max - x_min) , x_min, x_max, (y_max - y_min), y_min, y_max);
+	// h2->Sumw2();
+	// if(!opt_fit){
+	// 	for(int i = x_min; i < x_max; i++){
+	// 		for(int j = y_min; j < y_max; j++){
+	// 			if(weight[i][j]){
+	// 				h2->Fill(i, j, weight[i][j]);
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// else{
+	// 	std::cout << maxWeight << "," << minWeight << std::endl;
+	// 	for(int i = x_min; i < x_max; i++){
+	// 		for(int j = y_min; j < y_max; j++){
+	// 			if(weight[i][j]){
+	// 				double normalizedWeight = ((double)weight[i][j] - (double)minWeight) / ((double)maxWeight - (double)minWeight);
+	// 				double sqrtWeight = std::sqrt(weight[i][j]);
+	// 				h2->Fill(i, j, normalizedWeight);
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// TH1D *pj = (TH1D*)h2->ProjectionX();
+	// // Z-Score Standarization	
+	// // int nbins = pj->GetNbinsX();
+	// // double mean = pj->GetMean();
+	// // double stdDev = pj->GetStdDev();
+	// // for (int i = 1; i <= nbins; ++i) {
+	// // 	double binContent = pj->GetBinContent(i);
+	// // 	double normalizedValue = (binContent - mean) / (stdDev);
+	// // 	pj->SetBinContent(i, normalizedValue);
+	// // }
+
+	// if(opt_fit){
+	// 	TCanvas *c1 = new TCanvas("c1", "2D Histogram", 650, 700);
+	// 	c1->Divide(1,2);
+	// 	//subplot1
+	// 	c1->cd(1);
+	// 	//h2->SetStats(0);
+	// 	h2->Draw("COLZ");
+	// 	TBox *box = nullptr;
+	// 	if(opt_Red) highlight(weight, box, threshold, opt_sub);
+	// 	p.pointer_share(h1, h2, box, c1);
+
+	// 	//subplot2
+	// 	c1->cd(2);
+	// 	// ガウスフィッティング
+	// 	TF1 *gaus = new TF1("gaus", "gaus", -5, 5);
+
+	// 	double pvalue = gaus->GetProb();
+	// 	std::cout << "p-value: " << pvalue << std::endl; 
+
+	// 	pj->Draw("same");
+	// 	pj->Fit("gaus");
+	// 	gaus->Draw("same");
+	// 	c1->Update();
+	// }
+	
+	// else{
+	// 	TCanvas *c1 = new TCanvas("c1", "2D Histogram", 650, 400);
+	// 	//h2->SetStats(0);
+	// 	h2->Draw("COLZ");
+	// 	TBox *box = nullptr;
+	// 	if(opt_Red) highlight(weight, box, threshold, opt_sub);
+	// 	p.pointer_share(h1, h2, box, c1);
+	// 	h2->Draw();
+	// 	c1->Update();
+	// }
+
+}
+
+std::vector<int> MyClass::Find_AutoCluster(){
+	// //使用する変数。
+	// std::vector<std::vector<char>> map(x_max, std::vector<char>(y_max));
+	// double threshold;
+	// std::vector<block> cluster;
+	// Long64_t nentries;
+	// std::vector<std::vector<UShort_t>> weight(128, std::vector<UShort_t>(128));
+	// //クラスターがあるエントリーナンバーを全て返す
+	// std::vector<int> res;
+	// // エントリー数の数だけ、走査
+	// // if (fChain == nullptr) return res;
+	// nentries = fChain->GetEntries();
+	// for(int entry_num = 0; entry_num < nentries; entry_num++){
+	// 	fChain->GetEntry(entry_num);
+	// 	TH1D *h1 = new TH1D("h1", "1D Histogram;X;Entries", 100, 1000, 1500);
+	// 	create_1Dhist(h1, weight, ADC);
+	// 	//閾値の設定
+	// 	threshold = h1->GetMean() + 3 * h1->GetStdDev(); 
+	// 	create_map(map, weight, threshold, true);
+
+	// 	int ans = call_dfs(map, cluster, weight, true);
+
+	// 	if(ans <= 1){
+	// 		res.push_back(entry_num);
+	// 	}
+	// }
+	// return res;
+}
+
+std::vector<std::vector<UShort_t>> MyClass::Get_ADC(Int_t entry_num){
+	Long64_t nentries;
 	//エントリー数を指定する
 	if (fChain == nullptr) return;
 	nentries = fChain->GetEntriesFast();
 	fChain->GetEntry(entry_num);
 
-	TH1D *h1 = new TH1D("h1", "1D Histogram;X;Entries", 100, 1000, 1500);
-	create_1Dhist(h1, weight, ADC);
-	TCanvas *c2 = new TCanvas("c2", "1D Histogram", 600, 400);
-	h1->Draw();
-	c2->Update();
-	//閾値の設定
-	threshold = h1->GetMean() + 3 * h1->GetStdDev(); 
-	std::cout << "閾値:" << threshold << std::endl;
-
-	create_map(map, weight, threshold, opt_sub);
-	std::cout << "クラスターカウント:" << call_dfs(map, cluster, weight, opt_sub) << std::endl;
-	if(!cluster.empty()){
-		for(int i = 0; i < cluster.size(); i++){
-			std::pair<double, double> ans = cluster[i].center_of_gravity(weight);
-			std::cout << "重心:" << ans.first << ", " << ans.second << std::endl;
-			}
-	}
-	for(int i = x_min; i < x_max; i++){
-		for(int j = y_min; j < y_max; j++){
-			if(weight[i][j]){
-				maxWeight = std::max(weight[i][j], maxWeight);
-				minWeight = std::min(weight[i][j], minWeight);
-			}
-		}
-	}
-	TH2D *h2 = new TH2D("h2", "2D Histogram;X;Y", (x_max - x_min) , x_min, x_max, (y_max - y_min), y_min, y_max);
-	h2->Sumw2();
-	if(!opt_fit){
-		for(int i = x_min; i < x_max; i++){
-			for(int j = y_min; j < y_max; j++){
-				if(weight[i][j]){
-				h2->Fill(i, j, weight[i][j]);
-				}
-			}
-		}
-	}
-	else{
-		std::cout << maxWeight << "," << minWeight << std::endl;
-		for(int i = x_min; i < x_max; i++){
-			for(int j = y_min; j < y_max; j++){
-				if(weight[i][j]){
-				double normalizedWeight = ((double)weight[i][j] - (double)minWeight) / ((double)maxWeight - (double)minWeight);
-				double sqrtWeight = std::sqrt(weight[i][j]);
-				h2->Fill(i, j, normalizedWeight);
-					}
-				}
-			}
-		}
-		// TH2D *aa;
-		// aa->Sumw2();
-	TH1D *pj = (TH1D*)h2->ProjectionX();
-	// Z-Score Standarization	
-	// int nbins = pj->GetNbinsX();
-	// double mean = pj->GetMean();
-	// double stdDev = pj->GetStdDev();
-	// for (int i = 1; i <= nbins; ++i) {
-	// 	double binContent = pj->GetBinContent(i);
-	// 	double normalizedValue = (binContent - mean) / (stdDev);
-	// 	pj->SetBinContent(i, normalizedValue);
-	// }
-
-	if(opt_fit){
-		TCanvas *c1 = new TCanvas("c1", "2D Histogram", 650, 700);
-		c1->Divide(1,2);
-		//subplot1
-		c1->cd(1);
-		//h2->SetStats(0);
-		h2->Draw("COLZ");
-		TBox *box = nullptr;
-		if(opt_Red) highlight(weight, box, threshold, opt_sub);
-		p.pointer_share(h1, h2, box, c1);
-
-		//subplot2
-		c1->cd(2);
-		// ガウスフィッティング
-		TF1 *gaus = new TF1("gaus", "gaus", -5, 5);
-
-		double pvalue = gaus->GetProb();
-		std::cout << "p-value: " << pvalue << std::endl; 
-
-		pj->Draw("same");
-		pj->Fit("gaus");
-		gaus->Draw("same");
-		c1->Update();
-	}
-	
-	else{
-		TCanvas *c1 = new TCanvas("c1", "2D Histogram", 650, 400);
-		//h2->SetStats(0);
-		h2->Draw("COLZ");
-		TBox *box = nullptr;
-		if(opt_Red) highlight(weight, box, threshold, opt_sub);
-		p.pointer_share(h1, h2, box, c1);
-		h2->Draw();
-		c1->Update();
-	}
-
-}
-
-std::vector<int> MyClass::Find_AutoCluster(){
-	//使用する変数。
-	std::vector<std::vector<char>> map(x_max, std::vector<char>(y_max));
-	double threshold;
-	std::vector<block> cluster;
-	Long64_t nentries;
-	std::vector<std::vector<UShort_t>> weight(128, std::vector<UShort_t>(128));
-	//クラスターがあるエントリーナンバーを全て返す
-	std::vector<int> res;
-	// エントリー数の数だけ、走査
-	// if (fChain == nullptr) return res;
-	nentries = fChain->GetEntries();
-	for(int entry_num = 0; entry_num < nentries; entry_num++){
-		fChain->GetEntry(entry_num);
-		TH1D *h1 = new TH1D("h1", "1D Histogram;X;Entries", 100, 1000, 1500);
-		create_1Dhist(h1, weight, ADC);
-		//閾値の設定
-		threshold = h1->GetMean() + 3 * h1->GetStdDev(); 
-		create_map(map, weight, threshold, true);
-
-		int ans = call_dfs(map, cluster, weight, true);
-
-		if(ans <= 1){
-			res.push_back(entry_num);
+	std::vector<std::vector<UShort_t>> res(128, std::vector<UShort_t>(128));
+	for(int i = 0; i < 128; i++){
+		for(int j = 0; j < 128; j++){
+			res[i][j] = ADC[i][j];
 		}
 	}
 	return res;
+}
+
+void AnalyzeAndVisualizeClusters(){
+	//使用する変数。
+	ADC_DATA weight(128, std::vector<UShort_t>(128));
+	THRESHOLD_MAP map(x_max - x_min, std::vector<char>(y_max - y_min));
+	double threshold;
+	CLUSTER_DATA cluster;
+
+	//1次元ヒストグラムの作成
+	TH1D *h1 = new TH1D("h1", "1D Histogram;X;Entries", 100, 1000, 1500);
+	Fill_1Dhist(h1, weight);
+	TCanvas *hist1D = new TCanvas("hist1D", "1D Histogram", 600, 400);
+	h1->Draw();
+	hist1D->Update();
+
+	//閾値の設定
+	threshold = h1->GetMean() + 3 * h1->GetStdDev();
+	std::cout << "Threshold: " << threshold << std::endl;
+
+	//2次元マップの作成
+	create_map(map, weight, threshold, true);
+	std::cout << "Cluster count: " << call_dfs(map, cluster, weight, true) << std::endl;
+	
 }
 
 /*Rootでこのコードを立ち上げたときはイベント数の引数を設定してこの関数を呼び出す。

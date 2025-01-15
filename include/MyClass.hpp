@@ -39,6 +39,8 @@ public :
    virtual void     Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit);
    //自動でクラスターがあるエントリー数を全て出力する関数
    virtual std::vector<int> Find_AutoCluster();
+   //ADC値をvectorにして返す関数
+   virtual std::vector<std::vector<UShort_t>> Get_ADC(Int_t event_num);
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 };

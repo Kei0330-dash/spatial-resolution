@@ -1,6 +1,7 @@
 #ifndef GUIMAIN_HPP
 #define GUIMAIN_HPP
 
+#include <iostream>  // std::coutを使用するために追加
 #include <TGButton.h>
 #include <TGNumberEntry.h>
 // #include <TGCheckButton.h>
@@ -10,7 +11,6 @@
 #include <TGClient.h>
 #include <TGFileDialog.h>
 #include <TGTextEntry.h>
-#include <iostream>  // std::coutを使用するために追加
 
 class MyMainFrame : public TGMainFrame {
 public:
