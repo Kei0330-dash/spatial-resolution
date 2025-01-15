@@ -1,5 +1,6 @@
 #ifndef ANALYSIS_HPP
 #define ANALYSIS_HPP
+
 #include "alias.hpp"
 #include "MyClass.hpp"
 #include "block.hpp"
@@ -24,7 +25,7 @@
 /// @brief 深さ優先探索を実行してクラスターの塊を走査。
 /// @param x ピクセルのx軸
 /// @param y ピクセルのy軸
-/// @param map 2次元のグラフ
+/// @param map 閾値が超えた情報を格納した2次元の配列
 /// @return クラスターの塊としての情報を返す。
 block dfs(int x, int y, THRESHOLD_MAP &map);
 
@@ -33,11 +34,23 @@ block dfs(int x, int y, THRESHOLD_MAP &map);
 /// @param weight 2次元のADC値を格納した配列
 void Fill_1Dhist(TH1D* &h1, ADC_DATA &weight);
 
-void create_map(THRESHOLD_MAP &map, ADC_DATA &weight, double threshold, bool opt_sub);
+/// @brief 2次元のヒストグラムを作ります。
+/// @param h2 動的に確保したROOTの2次元ヒストグラム
+/// @param weight 2次元のADC値を格納した配列
+void Fill_2Dhist(TH2D* &h2, ADC_DATA &weight);
 
-int  call_dfs(THRESHOLD_MAP &map, std::vector<block> &cluster, ADC_DATA &weight, bool opt_sub);
+/// @brief 深さ優先探索をするためにmapを作成する関数。
+/// @param weight ADC値
+/// @param threshold 閾値
+/// @param opt_sub オプションで、ADC値から閾値を引くかどうかを指定する。閾値より小さい場合は0にする。
+/// @return 閾値が超えた情報を格納した2次元の配列を返す。
+THRESHOLD_MAP create_map(ADC_DATA &weight, double threshold, bool opt_sub);
+
+int  call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, bool opt_sub);
 
 void highlight(ADC_DATA &weight, TBox* &box, double threshold, bool opt_sub);
+
+void AnalyzeAndVisualizeClusters(bool opt_Red = false, bool opt_sub = false, bool opt_fit = false);
 
 void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false, bool opt_AutoCluster = false, TString path = "/home/otokun241/newRepository/data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
 

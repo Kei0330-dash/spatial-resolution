@@ -13,6 +13,6 @@ class block;
 using ADC_DATA = std::vector<std::vector<UShort_t>>;
 /// @brief 2次元の配列として、閾値を超えたところを'W'、超えていないところを'.'で表現したもの
 using THRESHOLD_MAP = std::vector<std::vector<char>>;
-/// @brief クラスターの塊としての情報を返す。
+/// @brief クラスターの塊の情報を格納したもの
 using CLUSTER_DATA = std::vector<block>;
 #endif

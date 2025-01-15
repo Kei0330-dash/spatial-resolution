@@ -17,13 +17,13 @@
 #include <TF2.h>
 #include <algorithm>
 //2次元ヒストグラムの最小値から最大値
-const Int_t x_min = 0, x_max = 128,
+const int x_min = 0, x_max = 128,
             y_min = 0, y_max = 128;
 //
 all_delete p;
 TFile *file = nullptr;
 
-block dfs(int x, int y, std::vector<std::vector<char>> &map){
+block dfs(int x, int y, THRESHOLD_MAP &map){
 	std::stack<std::pair<int, int>> st;
 	st.push({x, y});
 	block cluster;
@@ -49,7 +49,7 @@ block dfs(int x, int y, std::vector<std::vector<char>> &map){
 	return cluster;
 }
 
-void Fill_1Dhist(TH1D* &h1, std::vector<std::vector<UShort_t>> &weight){
+void Fill_1Dhist(TH1D* &h1, ADC_DATA &weight){
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
 			h1->Fill(weight[i][j]);
@@ -57,7 +57,16 @@ void Fill_1Dhist(TH1D* &h1, std::vector<std::vector<UShort_t>> &weight){
 	}
 }
 
-void create_map(std::vector<std::vector<char>> &map, std::vector<std::vector<UShort_t>> &weight, double threshold, bool opt_sub){
+void Fill_2Dhist(TH2D* &h2, ADC_DATA &weight){
+	for(Long64_t i = x_min; i < x_max; i++){
+		for(Long64_t j = y_min; j < y_max; j++){
+			h2->Fill(i, j, weight[i][j]);
+		}
+	}
+}
+
+THRESHOLD_MAP create_map(ADC_DATA &weight, double threshold, bool opt_sub){
+	THRESHOLD_MAP map(x_max - x_min, std::vector<char>(y_max - y_min));
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
 			if((UShort_t)threshold < weight[i][j]){
@@ -72,9 +81,10 @@ void create_map(std::vector<std::vector<char>> &map, std::vector<std::vector<USh
 			}
 		}
 	}
+	return map;
 }
 
-int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, std::vector<std::vector<UShort_t>> &weight, bool opt_sub){
+int call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, bool opt_sub){
 	int count = 0;
 	for(int i = x_min; i < x_max; i++){
 		for(int j = y_min; j < y_max; j++){
@@ -89,7 +99,7 @@ int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, s
 	return count;
 }
 
-void highlight(std::vector<std::vector<UShort_t>> &weight, TBox* &box, double threshold, bool opt_sub){
+void highlight(ADC_DATA &weight, TBox* &box, double threshold, bool opt_sub){
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
 			if(0 < weight[i][j] && opt_sub ||(u_short)threshold < weight[i][j]){
@@ -105,11 +115,11 @@ void highlight(std::vector<std::vector<UShort_t>> &weight, TBox* &box, double th
 
 void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 	// //使用する変数。
-	// std::vector<std::vector<char>> map(x_max, std::vector<char>(y_max));
+	// THRESHOLD_MAP map(x_max, std::vector<char>(y_max));
 	// double threshold;
-	// std::vector<block> cluster;
+	// CLUSTER_DATA cluster;
 	// Long64_t nentries;
-	// std::vector<std::vector<UShort_t>> weight(128, std::vector<UShort_t>(128));
+	// ADC_DATA weight(128, std::vector<UShort_t>(128));
 	// double totalWeight = 0.0;
 	// UShort_t maxWeight = 0;
 	// UShort_t minWeight = 9999;
@@ -218,11 +228,11 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 
 std::vector<int> MyClass::Find_AutoCluster(){
 	// //使用する変数。
-	// std::vector<std::vector<char>> map(x_max, std::vector<char>(y_max));
+	// THRESHOLD_MAP map(x_max, std::vector<char>(y_max));
 	// double threshold;
-	// std::vector<block> cluster;
+	// CLUSTER_DATA cluster;
 	// Long64_t nentries;
-	// std::vector<std::vector<UShort_t>> weight(128, std::vector<UShort_t>(128));
+	// ADC_DATA weight(128, std::vector<UShort_t>(128));
 	// //クラスターがあるエントリーナンバーを全て返す
 	// std::vector<int> res;
 	// // エントリー数の数だけ、走査
@@ -245,14 +255,14 @@ std::vector<int> MyClass::Find_AutoCluster(){
 	// return res;
 }
 
-std::vector<std::vector<UShort_t>> MyClass::Get_ADC(Int_t entry_num){
+ADC_DATA MyClass::Get_ADC(Int_t entry_num){
 	Long64_t nentries;
 	//エントリー数を指定する
 	if (fChain == nullptr) return;
 	nentries = fChain->GetEntriesFast();
 	fChain->GetEntry(entry_num);
 
-	std::vector<std::vector<UShort_t>> res(128, std::vector<UShort_t>(128));
+	ADC_DATA res(128, std::vector<UShort_t>(128));
 	for(int i = 0; i < 128; i++){
 		for(int j = 0; j < 128; j++){
 			res[i][j] = ADC[i][j];
@@ -261,7 +271,7 @@ std::vector<std::vector<UShort_t>> MyClass::Get_ADC(Int_t entry_num){
 	return res;
 }
 
-void AnalyzeAndVisualizeClusters(){
+void AnalyzeAndVisualizeClusters(bool opt_Red, bool opt_sub, bool opt_fit){
 	//使用する変数。
 	ADC_DATA weight(128, std::vector<UShort_t>(128));
 	THRESHOLD_MAP map(x_max - x_min, std::vector<char>(y_max - y_min));
@@ -280,9 +290,31 @@ void AnalyzeAndVisualizeClusters(){
 	std::cout << "Threshold: " << threshold << std::endl;
 
 	//2次元マップの作成
-	create_map(map, weight, threshold, true);
-	std::cout << "Cluster count: " << call_dfs(map, cluster, weight, true) << std::endl;
-	
+	map = create_map(weight, threshold, opt_sub);
+	std::cout << "Cluster count: " << call_dfs(map, cluster, weight, opt_sub) << std::endl;
+
+	//クラスターがある場合、重心を求める
+	if(!cluster.empty()){
+		for(int i = 0; i < cluster.size(); i++){
+			std::pair<double, double> ans = cluster[i].center_of_gravity(weight);
+			std::cout << "Center of gravity: " << ans.first << ", " << ans.second << std::endl;
+		}
+	}
+
+	//2次元ヒストグラムの作成
+	TH2D *h2 = new TH2D("h2", "2D Histogram;X;Y", (x_max - x_min), x_min, x_max, (y_max - y_min), y_min, y_max);
+	h2->Sumw2();
+	Fill_2Dhist(h2, weight);
+
+	//閾値を超えた部分を強調表示
+	TCanvas *hist2D = new TCanvas("hist2D", "2D Histogram", 650, 700);
+	// hist2D->Divide(1, 2);
+	// hist2D->cd(1);
+	h2->Draw("COLZ");
+	TBox *box = nullptr;
+	if(opt_Red) highlight(weight, box, threshold, opt_sub);
+	p.pointer_share(h1, h2, box, hist2D);
+
 }
 
 /*Rootでこのコードを立ち上げたときはイベント数の引数を設定してこの関数を呼び出す。
