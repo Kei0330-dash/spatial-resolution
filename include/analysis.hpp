@@ -50,7 +50,7 @@ int  call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, bool 
 
 void highlight(ADC_DATA &weight, TBox* &box, double threshold, bool opt_sub);
 
-void AnalyzeAndVisualizeClusters(bool opt_Red = false, bool opt_sub = false, bool opt_fit = false);
+void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false);
 
 void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false, bool opt_AutoCluster = false, TString path = "/home/otokun241/newRepository/data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
 

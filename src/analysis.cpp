@@ -271,9 +271,8 @@ ADC_DATA MyClass::Get_ADC(Int_t entry_num){
 	return res;
 }
 
-void AnalyzeAndVisualizeClusters(bool opt_Red, bool opt_sub, bool opt_fit){
+void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bool opt_fit){
 	//使用する変数。
-	ADC_DATA weight(128, std::vector<UShort_t>(128));
 	THRESHOLD_MAP map(x_max - x_min, std::vector<char>(y_max - y_min));
 	double threshold;
 	CLUSTER_DATA cluster;
@@ -332,7 +331,9 @@ void runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit, bool 
    }
    TTree *SOFIST_Data = (TTree*)file->Get("SOFIST_Data");
    myobj = new MyClass(SOFIST_Data);
-   myobj->Loop(event_num, opt_Red, opt_sub, opt_fit);
+//    myobj->Loop(event_num, opt_Red, opt_sub, opt_fit);
+	ADC_DATA data = myobj->Get_ADC(event_num);
+	AnalyzeAndVisualizeClusters(data, opt_Red, opt_sub, opt_fit);
    delete myobj;
 }
 
