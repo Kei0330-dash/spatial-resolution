@@ -22,7 +22,8 @@
 // ========================================================================================================
 // プロトタイプ宣言
 // ========================================================================================================
-/// @brief 深さ優先探索を実行してクラスターの塊を走査。
+
+/// @brief 深さ優先探索を実行してクラスターの塊を走査する。ただし、直接呼ばずint call_dfs()を経由して呼び出すこと。。
 /// @param x ピクセルのx軸
 /// @param y ピクセルのy軸
 /// @param map 閾値が超えた情報を格納した2次元の配列
@@ -46,12 +47,35 @@ void Fill_2Dhist(TH2D* &h2, ADC_DATA &weight);
 /// @return 閾値が超えた情報を格納した2次元の配列を返す。
 THRESHOLD_MAP create_map(ADC_DATA &weight, double threshold, bool opt_sub);
 
-int  call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, bool opt_sub);
+/// @brief 深さ優先探索を呼び出す関数。これを使うことでそのイベントのクラスターの数がわかる。
+/// @param map 閾値を超えた後のmapであり、閾値が超えたところを'W',それ以外を'.'で表現する。
+/// @param cluster クラスターの塊の配列で、dfsで走査された結果がこの中に格納される。
+/// @param weight クラスターが単体だった場合その重みのデータは削除される。
+/// @param opt_sub ペデスタル減算をするかどうかのフラグ。
+/// @return そのイベントのクラスターの数を出力する。
+int  call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, const bool opt_sub);
 
+/// @brief この関数を起動すると、クラスターを強調表示します。
+/// @param weight 重みを基準にします。
+/// @param box このclassに強調表示の情報がはいっています。
+/// @param threshold 閾値です。
+/// @param opt_sub 
 void highlight(ADC_DATA &weight, TBox* &box, double threshold, bool opt_sub);
 
+/// @brief 
+/// @param weight 
+/// @param opt_Red 
+/// @param opt_sub 
+/// @param opt_fit 
 void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false);
 
+/// @brief root -l analysis.cppをターミナルでやって読み込んだ時、まずこの関数を呼び出します。
+/// @param event_num eventのエントリー数を選ぶ
+/// @param opt_Red クラスターを強調表示するかを選ぶ。
+/// @param opt_sub ペデスタルを減算するかを選ぶ。
+/// @param opt_fit フィッティングをするかを選ぶ。
+/// @param opt_AutoCluster オートでクラスターがあるかどうかを判定します。他の引数に左右されません
+/// @param path データのパスを入力します。デフォルトで選ばれている引数を変更して自分の環境に合わせたパスを入力してください。
 void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false, bool opt_AutoCluster = false, TString path = "/home/otokun241/newRepository/data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
 
 void closefile();

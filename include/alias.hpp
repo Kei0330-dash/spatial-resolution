@@ -9,6 +9,7 @@
 class block;
 
 // エイリアスの定義
+
 /// @brief 2次元のADC値を格納した配列
 using ADC_DATA = std::vector<std::vector<UShort_t>>;
 /// @brief 2次元の配列として、閾値を超えたところを'W'、超えていないところを'.'で表現したもの

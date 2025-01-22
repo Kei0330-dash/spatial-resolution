@@ -90,7 +90,7 @@ int call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, bool o
 		for(int j = y_min; j < y_max; j++){
 			if(map[i][j] == 'W'){
 				block tmp = dfs(i, j, map);
-				if(tmp.flag)cluster.push_back(tmp);
+				if(tmp.flag) cluster.push_back(tmp);
 				else{if(opt_sub)weight[i][j] = 0, count--;}
 				count++;
 			}
