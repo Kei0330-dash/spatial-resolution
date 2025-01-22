@@ -4,7 +4,7 @@ CXXFLAGS = -std=c++11 $(shell root-config --cflags)
 LDFLAGS = $(shell root-config --glibs)
 
 # ソースファイルとオブジェクトファイル
-SOURCES = src/GUImain.cpp build/GUI_Dict.cpp src/analysis.cpp
+SOURCES = src/GUImain.cpp build/GUI_Dict.cpp src/analysis.cpp src/Find_AutoCluster.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
 # 実行ファイル
@@ -17,7 +17,7 @@ all: $(BUILD_DIR)/$(EXECUTABLE)
 # 実行ファイルのビルド
 $(BUILD_DIR)/$(EXECUTABLE): $(OBJECTS)
 	mkdir -p $(BUILD_DIR)
-	$(CXX) -o $@ $^ $(LDFLAGS)
+	$(CXX) -g -o $@ $^ $(LDFLAGS)
 
 # オブジェクトファイルのビルド
 %.o: %.cpp

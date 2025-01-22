@@ -17,6 +17,7 @@ public:
     MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h);
     virtual ~MyMainFrame();
     void HandleButton();
+	void SearchCluster();
 	void OpenFile();
     void CloseWindow();
     int Get_Entry_num();
@@ -30,7 +31,8 @@ private:
     TGCheckButton *Option_Red;
     TGCheckButton *Option_Substract;
     TGCheckButton *Option_Fitting;
-    TGTextButton *Run_analysis; 
+    TGTextButton *Run_analysis;
+	TGTextButton *SearchCluster_Button;
 	TGTextButton *Open_file;
 	TGTextEntry *pathEntry;
     ClassDef(MyMainFrame, 0);

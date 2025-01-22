@@ -31,8 +31,10 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
     // ボタンを含む水平フレームを作成
     TGHorizontalFrame *buttonFrame = new TGHorizontalFrame(mainFrame, 200, 50);
     Run_analysis = new TGTextButton(buttonFrame, "Run");
+	SearchCluster_Button = new TGTextButton(buttonFrame, "SearchCluster");
     Open_file = new TGTextButton(buttonFrame, "Open File");
     buttonFrame->AddFrame(Run_analysis, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 10, 10, 5, 5));
+    buttonFrame->AddFrame(SearchCluster_Button, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 10, 10, 5, 5));
     buttonFrame->AddFrame(Open_file, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 10, 10, 5, 5));
     mainFrame->AddFrame(buttonFrame, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
 
@@ -45,6 +47,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
     AddFrame(mainFrame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
     Run_analysis->Connect("Clicked()", "MyMainFrame", this, "HandleButton()");
+    SearchCluster_Button->Connect("Clicked()", "MyMainFrame", this, "SearchCluster()");
     Open_file->Connect("Clicked()", "MyMainFrame", this, "OpenFile()");
 
     SetWindowName("Settings screen");
@@ -66,11 +69,19 @@ void MyMainFrame::HandleButton() {
     runMyClass(Get_Entry_num(), Get_Option_Red(), Get_Option_Substract(), Get_Option_Fitting(), false, path);
 }
 
+void MyMainFrame::SearchCluster() {
+	TString path = Get_EnteredPath();
+	if (path.Length() == 0) {
+		std::cerr << "Error: No file path specified" << std::endl;
+		return;
+	}
+    runMyClass(0, false, false, false, true, path);
+}
+
 void MyMainFrame::OpenFile() {
     TString enteredPath = Get_EnteredPath();
     if (enteredPath.Length() > 0) {
         // ファイルパスが入力されている場合そのパスを消す
-		// pathEntry->Clear();
     }
 	static TString dir(".");
 	TGFileInfo fileInfo;

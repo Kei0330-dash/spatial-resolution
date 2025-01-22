@@ -38,7 +38,7 @@ public :
    virtual void     Gaus2D_fitting(double x_center, double y_center, TH2D* h2);
    virtual void     Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit);
    //自動でクラスターがあるエントリー数を全て出力する関数
-   virtual std::vector<int> Find_AutoCluster();
+   virtual void Find_AutoCluster();
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 };

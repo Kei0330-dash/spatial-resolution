@@ -64,6 +64,10 @@
 		"thread": "cpp",
 		"typeinfo": "cpp",
 		"forward_list": "cpp",
-		"cinttypes": "cpp"
+		"cinttypes": "cpp",
+		"bitset": "cpp",
+		"codecvt": "cpp",
+		"optional": "cpp",
+		"__nullptr": "cpp"
 	}
 }

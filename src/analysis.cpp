@@ -39,10 +39,10 @@ block dfs(int x, int y, std::vector<std::vector<char>> &map){
 				int nx = cx + dx, ny = cy + dy;
 				//2次元で作成したmapが範囲外でないときかつmapの値がWであればその座標でstackにpushする。
 				if(x_min <= nx && nx < x_max && y_min <= ny && ny < y_max && map[nx][ny] == 'W'){
-				cluster.flag = true;
-				cluster.place.insert({nx, ny});
-				st.push({nx, ny});
-				}
+					cluster.flag = true;
+					cluster.place.insert({nx, ny});
+					st.push({nx, ny});
+					}
 				}
 			}
 		}
@@ -170,7 +170,9 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 		}
 		// TH2D *aa;
 		// aa->Sumw2();
-	TH1D *pj = (TH1D*)h2->ProjectionX();
+	TH1D *pj = new TH1D("h1", "1Dhistgram;X;entries", (x_max - x_min), x_min, x_max);
+	pj = (TH1D*)h2->ProjectionX();
+	//pj->Sumw2(0);
 	// Z-Score Standarization	
 	// int nbins = pj->GetNbinsX();
 	// double mean = pj->GetMean();
@@ -199,7 +201,7 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 
 		double pvalue = gaus->GetProb();
 		std::cout << "p-value: " << pvalue << std::endl; 
-
+		// pj->Sumw2(0);
 		pj->Draw("same");
 		pj->Fit("gaus");
 		gaus->Draw("same");
@@ -219,34 +221,7 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 
 }
 
-std::vector<int> MyClass::Find_AutoCluster(){
-	//使用する変数。
-	std::vector<std::vector<char>> map(x_max, std::vector<char>(y_max));
-	double threshold;
-	std::vector<block> cluster;
-	Long64_t nentries;
-	std::vector<std::vector<UShort_t>> weight(128, std::vector<UShort_t>(128));
-	//クラスターがあるエントリーナンバーを全て返す
-	std::vector<int> res;
-	// エントリー数の数だけ、走査
-	// if (fChain == nullptr) return res;
-	nentries = fChain->GetEntries();
-	for(int entry_num = 0; entry_num < nentries; entry_num++){
-		fChain->GetEntry(entry_num);
-		TH1D *h1 = new TH1D("h1", "1D Histogram;X;Entries", 100, 1000, 1500);
-		create_1Dhist(h1, weight, ADC);
-		//閾値の設定
-		threshold = h1->GetMean() + 3 * h1->GetStdDev(); 
-		create_map(map, weight, threshold, true);
 
-		int ans = call_dfs(map, cluster, weight, true);
-
-		if(ans <= 1){
-			res.push_back(entry_num);
-		}
-	}
-	return res;
-}
 
 /*Rootでこのコードを立ち上げたときはイベント数の引数を設定してこの関数を呼び出す。
 第一引数はeventのどこを参照するか選ぶ。第二引数は、クラスターの強調表示をするかを選ぶ。第三引数はペデスタルの減算するかを選ぶ。
@@ -261,9 +236,15 @@ void runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit, bool 
          return;
       }
    }
+
    TTree *SOFIST_Data = (TTree*)file->Get("SOFIST_Data");
    myobj = new MyClass(SOFIST_Data);
+   if(!opt_AutoCluster){
    myobj->Loop(event_num, opt_Red, opt_sub, opt_fit);
+   }
+   else{
+	myobj->Find_AutoCluster();
+   }
    delete myobj;
 }
 
