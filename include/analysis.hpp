@@ -21,7 +21,9 @@ class block : public virtual MyClass {
 public:
     bool flag = false;
     std::set<std::pair<int, int>> place;
-    inline int Get_pixel_count();
+    int Get_pixel_count() const{
+		return place.size();
+	};
     double Get_xcenter() { return x_g; }
     double Get_ycenter() { return y_g; }
     double Get_ADCsum() { return ADCsum; }
@@ -32,7 +34,10 @@ public:
     inline std::pair<double, double> center_of_gravity(std::vector<std::vector<UShort_t>> &weight);
 	inline void Calc_min_max();
     inline void Print_NormalDistribution(std::vector<std::vector<UShort_t>> &weight);
-
+	// ソートのために"<"演算子をオーバーロード
+    bool operator<(const block& other) const {
+		return Get_pixel_count() < other.Get_pixel_count();
+    }
 private:
     int i;
     double x_g, y_g, ADCsum;
@@ -51,10 +56,10 @@ public:
     inline void pointer_delete();
 };
 
-// クラスターのピクセルの数を出力する。
-inline int block::Get_pixel_count() {
-    return place.size();
-}
+// // クラスターのピクセルの数を出力する。
+// int block::Get_pixel_count() const {
+//     return place.size();
+// }
 
 // 重心を計算して返り値として pair の first に x 軸の重心の値、second に y 軸の重心の値を返す。
 inline std::pair<double, double> block::center_of_gravity(std::vector<std::vector<UShort_t>> &weight) {

@@ -75,7 +75,7 @@ void MyMainFrame::SearchCluster() {
 		std::cerr << "Error: No file path specified" << std::endl;
 		return;
 	}
-    runMyClass(0, false, false, false, true, path);
+    runMyClass(0, false, Get_Option_Substract(), false, true, path);
 }
 
 void MyMainFrame::OpenFile() {

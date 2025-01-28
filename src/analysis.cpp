@@ -82,7 +82,7 @@ int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, s
 			if(map[i][j] == 'W'){
 				block tmp = dfs(i, j, map);
 				if(tmp.flag)cluster.push_back(tmp);
-				else{if(opt_sub)weight[i][j] = 0, count--;}
+				// else{if(opt_sub)weight[i][j] = 0, count--;}
 				count++;
 			}
 		}
@@ -243,7 +243,7 @@ void runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit, bool 
    myobj->Loop(event_num, opt_Red, opt_sub, opt_fit);
    }
    else{
-	myobj->Find_AutoCluster();
+	myobj->Find_AutoCluster(opt_sub);
    }
    delete myobj;
 }
