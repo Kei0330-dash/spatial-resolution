@@ -8,6 +8,7 @@
 #ifndef MyClass_h
 #define MyClass_h
 
+#include "alias.hpp"
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
@@ -39,6 +40,8 @@ public :
    virtual void     Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit);
    //自動でクラスターがあるエントリー数を全て出力する関数
    virtual void Find_AutoCluster(bool opt_sub);
+   //ADC値をvectorにして返す関数
+   virtual ADC_DATA Get_ADC(Int_t event_num);
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 };

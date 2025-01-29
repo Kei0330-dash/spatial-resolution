@@ -1,12 +1,9 @@
-#ifndef header_root
-#define header_root
+#ifndef ANALYSIS_HPP
+#define ANALYSIS_HPP
 
+#include "alias.hpp"
 #include "MyClass.hpp"
-#include <TApplication.h>
-#include <TH2.h>
-#include <TStyle.h>
-#include <TCanvas.h>
-#include <TBox.h>
+#include "block.hpp"
 #include <iostream>
 #include <stack>
 #include <set>
@@ -14,38 +11,80 @@
 #include <chrono>
 #include <string>
 #include <limits>
-#include <TF2.h>
 #include <algorithm>
+#include <TApplication.h>
+#include <TH2.h>
+#include <TStyle.h>
+#include <TCanvas.h>
+#include <TBox.h>
+#include <TF2.h>
 
-class block : public virtual MyClass {
-public:
-    bool flag = false;
-    std::set<std::pair<int, int>> place;
-    int Get_pixel_count() const{
-		return place.size();
-	};
-	void   Set_eventnum(int input) {event_num = input;};
-	int    Get_eventnum() {return event_num;}
-    double Get_xcenter() { return x_g; }
-    double Get_ycenter() { return y_g; }
-    double Get_ADCsum() { return ADCsum; }
-	double Get_xmin() { return x_min; }
-	double Get_xmax() { return x_max; }
-	double Get_ymin() { return y_min; }
-	double Get_ymax() { return y_max; }
-    inline std::pair<double, double> center_of_gravity(std::vector<std::vector<UShort_t>> &weight);
-	inline void Calc_min_max();
-    inline void Print_NormalDistribution(std::vector<std::vector<UShort_t>> &weight);
-	// ソートのために"<"演算子をオーバーロード
-    bool operator<(const block& other) const {
-		return Get_pixel_count() < other.Get_pixel_count();
-    }
-private:
-    int i;
-    double x_g, y_g, ADCsum;
-	int x_min = 0, x_max = 128, y_min = 0, y_max = 128;
-	int event_num;
-};
+// ========================================================================================================
+// プロトタイプ宣言
+// ========================================================================================================
+
+/// @brief 深さ優先探索を実行してクラスターの塊を走査する。ただし、直接呼ばずint call_dfs()を経由して呼び出すこと。。
+/// @param x ピクセルのx軸
+/// @param y ピクセルのy軸
+/// @param map 閾値が超えた情報を格納した2次元の配列
+/// @return クラスターの塊としての情報を返す。
+block dfs(int x, int y, THRESHOLD_MAP &map);
+
+/// @brief 1次元のヒストグラムを作ります。
+/// @param h1 動的に確保したROOTの1次元ヒストグラム
+/// @param weight 2次元のADC値を格納した配列
+void Fill_1Dhist(TH1D* &h1, ADC_DATA &weight);
+
+/// @brief 2次元のヒストグラムを作ります。
+/// @param h2 動的に確保したROOTの2次元ヒストグラム
+/// @param weight 2次元のADC値を格納した配列
+void Fill_2Dhist(TH2D* &h2, ADC_DATA &weight);
+
+/// @brief 深さ優先探索をするためにmapを作成する関数。
+/// @param weight ADC値
+/// @param threshold 閾値
+/// @param opt_sub オプションで、ADC値から閾値を引くかどうかを指定する。閾値より小さい場合は0にする。
+/// @return 閾値が超えた情報を格納した2次元の配列を返す。
+THRESHOLD_MAP create_map(ADC_DATA &weight, double threshold, bool opt_sub);
+
+/// @brief 深さ優先探索を呼び出す関数。これを使うことでそのイベントのクラスターの数がわかる。
+/// @param map 閾値を超えた後のmapであり、閾値が超えたところを'W',それ以外を'.'で表現する。
+/// @param cluster クラスターの塊の配列で、dfsで走査された結果がこの中に格納される。
+/// @param weight クラスターが単体だった場合その重みのデータは削除される。
+/// @param opt_sub ペデスタル減算をするかどうかのフラグ。
+/// @return そのイベントのクラスターの数を出力する。
+int  call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, const bool opt_sub);
+
+/// @brief この関数を起動すると、クラスターを強調表示します。
+/// @param weight 重みを基準にします。
+/// @param box このclassに強調表示の情報がはいっています。
+/// @param threshold 閾値です。
+/// @param opt_sub 
+void highlight(ADC_DATA &weight, TBox* &box, double threshold, bool opt_sub);
+
+/// @brief 
+/// @param weight 
+/// @param opt_Red 
+/// @param opt_sub 
+/// @param opt_fit 
+void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false);
+
+/// @brief root -l analysis.cppをターミナルでやって読み込んだ時、まずこの関数を呼び出します。
+/// @param event_num eventのエントリー数を選ぶ
+/// @param opt_Red クラスターを強調表示するかを選ぶ。
+/// @param opt_sub ペデスタルを減算するかを選ぶ。
+/// @param opt_fit フィッティングをするかを選ぶ。
+/// @param opt_AutoCluster オートでクラスターがあるかどうかを判定します。他の引数に左右されません
+/// @param path データのパスを入力します。デフォルトで選ばれている引数を変更して自分の環境に合わせたパスを入力してください。
+void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false, bool opt_AutoCluster = false, TString path = "/home/otokun241/newRepository/data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
+
+void closefile();
+
+void run_100(int start, bool opt_Red = false, bool opt_sub = false);
+
+// ========================================================================================================
+
+
 
 class all_delete {
 private:
@@ -59,49 +98,7 @@ public:
     inline void pointer_delete();
 };
 
-// // クラスターのピクセルの数を出力する。
-// int block::Get_pixel_count() const {
-//     return place.size();
-// }
 
-// 重心を計算して返り値として pair の first に x 軸の重心の値、second に y 軸の重心の値を返す。
-inline std::pair<double, double> block::center_of_gravity(std::vector<std::vector<UShort_t>> &weight) {
-    x_g = 0.0, y_g = 0.0, ADCsum = 0.0;
-    std::pair<double, double> res;
-    for (auto &a : place) {
-        x_g += weight[a.first][a.second] * a.first;
-        y_g += weight[a.first][a.second] * a.second;
-        ADCsum += static_cast<double>(weight[a.first][a.second]);
-    }
-    std::cout << "ADC合計値:" << ADCsum << "\n";
-    x_g = x_g / ADCsum;
-    y_g = y_g / ADCsum;
-    res.first = x_g;
-    res.second = y_g;
-    return res;
-}
-
-// 最大値と最小値を計算する。
-inline void block::Calc_min_max() {
-	for (auto &a : place) {
-		x_min = std::min(x_min, a.first);
-		x_max = std::max(x_max, a.first);
-		y_min = std::min(y_min, a.second);
-		y_max = std::max(y_max, a.second);
-	}
-}
-
-// 廃棄予定
-inline void block::Print_NormalDistribution(std::vector<std::vector<UShort_t>> &weight) {
-    TCanvas c2("c2", "1D hist", 600, 500);
-    TH1D h1("h1", "1D Histogram;X;Entries", 100, 0, 1500);
-    for (auto &a : place) {
-        h1.Fill(weight[a.first][a.second]);
-    }
-    h1.Draw();
-    c2.Update();
-    c2.WaitPrimitive();
-}
 
 // pointer_share で共有した場所を全て消去するメンバ関数。
 // リニューアル後デストラクタとなる予定。
@@ -142,19 +139,4 @@ inline void MyClass::Gaus2D_fitting(double x_center, double y_center, TH2D* h2) 
     std::cout << "p-value: " << pvalue << std::endl;
 }
 
-block dfs(int x, int y, std::vector<std::vector<char>> &map);
-
-void create_1Dhist(TH1D* &h1, std::vector<std::vector<UShort_t>> &weight, UShort_t ADC[256][128]);
-
-void create_map(std::vector<std::vector<char>> &map, std::vector<std::vector<UShort_t>> &weight, double threshold, bool opt_sub);
-
-int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, std::vector<std::vector<UShort_t>> &weight, bool opt_sub, int event_num);
-
-void highlight(std::vector<std::vector<UShort_t>> &weight, TBox* &box, double threshold, bool opt_sub);
-
-void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false, bool opt_AutoCluster = false, TString path = "/home/otokun241/newRepository/data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
-
-void closefile();
-
-void run_100(int start, bool opt_Red = false, bool opt_sub = false);
 #endif
