@@ -24,6 +24,8 @@ public:
     int Get_pixel_count() const{
 		return place.size();
 	};
+	void   Set_eventnum(int input) {event_num = input;};
+	int    Get_eventnum() {return event_num;}
     double Get_xcenter() { return x_g; }
     double Get_ycenter() { return y_g; }
     double Get_ADCsum() { return ADCsum; }
@@ -42,6 +44,7 @@ private:
     int i;
     double x_g, y_g, ADCsum;
 	int x_min = 0, x_max = 128, y_min = 0, y_max = 128;
+	int event_num;
 };
 
 class all_delete {
@@ -145,7 +148,7 @@ void create_1Dhist(TH1D* &h1, std::vector<std::vector<UShort_t>> &weight, UShort
 
 void create_map(std::vector<std::vector<char>> &map, std::vector<std::vector<UShort_t>> &weight, double threshold, bool opt_sub);
 
-int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, std::vector<std::vector<UShort_t>> &weight, bool opt_sub);
+int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, std::vector<std::vector<UShort_t>> &weight, bool opt_sub, int event_num);
 
 void highlight(std::vector<std::vector<UShort_t>> &weight, TBox* &box, double threshold, bool opt_sub);
 

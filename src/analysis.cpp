@@ -75,12 +75,13 @@ void create_map(std::vector<std::vector<char>> &map, std::vector<std::vector<USh
 	}
 }
 
-int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, std::vector<std::vector<UShort_t>> &weight, bool opt_sub){
+int call_dfs(std::vector<std::vector<char>> &map, std::vector<block> &cluster, std::vector<std::vector<UShort_t>> &weight, bool opt_sub, int event_num){
 	int count = 0;
 	for(int i = x_min; i < x_max; i++){
 		for(int j = y_min; j < y_max; j++){
 			if(map[i][j] == 'W'){
 				block tmp = dfs(i, j, map);
+				tmp.Set_eventnum(event_num);
 				if(tmp.flag)cluster.push_back(tmp);
 				// else{if(opt_sub)weight[i][j] = 0, count--;}
 				count++;
@@ -126,11 +127,11 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 	h1->Draw();
 	c2->Update();
 	//閾値の設定
-	threshold = h1->GetMean() + 3 * h1->GetStdDev(); 
+	threshold = h1->GetMean() + 5 * h1->GetStdDev(); 
 	std::cout << "閾値:" << threshold << std::endl;
 
 	create_map(map, weight, threshold, opt_sub);
-	std::cout << "クラスターカウント:" << call_dfs(map, cluster, weight, opt_sub) << std::endl;
+	std::cout << "クラスターカウント:" << call_dfs(map, cluster, weight, opt_sub, entry_num) << std::endl;
 	if(!cluster.empty()){
 		for(int i = 0; i < cluster.size(); i++){
 			std::pair<double, double> ans = cluster[i].center_of_gravity(weight);

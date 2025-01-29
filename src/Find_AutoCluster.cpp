@@ -37,20 +37,17 @@ void MyClass::Find_AutoCluster(bool opt_sub){
 		Long64_t ientry = LoadTree(entry_num);
 		//もしもjentryを含むtreeが存在しなければbreak
 		if (ientry < 0) break;
-		//エントリー数を指定する
-		if (fChain == nullptr) return;
+		GetEntry(entry_num);
 
-		fChain->GetEntry(entry_num);
-
-		TH1D *h1 = new TH1D("h1", "1D Histogram;X;Entries", 100, 700, 1800);
-		create_1Dhist(h1, weight, ADC);
+		TH1D *hist = new TH1D("hist", "1D Histogram;X;Entries", 100, 700, 1800);
+		create_1Dhist(hist, weight, ADC);
 		//閾値の設定
-		threshold = h1->GetMean() + 4 * h1->GetStdDev(); 
-		delete h1;
-		h1 = nullptr;
+		threshold = hist->GetMean() + 5 * hist->GetStdDev(); 
+		delete hist;
+		hist = nullptr;
 		create_map(map, weight, threshold, opt_sub);
 
-		int ans = call_dfs(map, cluster, weight, opt_sub);
+		int ans = call_dfs(map, cluster, weight, opt_sub, entry_num);
 
 		res[entry_num] = std::make_pair(entry_num, ans); 
 		
@@ -63,7 +60,7 @@ void MyClass::Find_AutoCluster(bool opt_sub){
 	// X軸とY軸のラベルから小数点を非表示に設定
 	h1->GetXaxis()->SetNdivisions(50020);
 	// h1->GetYaxis()->SetNdivisions(505);
-	TCanvas *c1 = new TCanvas("c2", "1D Histogram", 1200, 800);
+	TCanvas *c1 = new TCanvas("c1", "Information about clusters", 1200, 800);
 	c1->Divide(2,2);
 	for(Long64_t i = 0; i < res.size(); i++){
 		h1->Fill(res[i].second);
@@ -75,9 +72,15 @@ void MyClass::Find_AutoCluster(bool opt_sub){
 		h2->Fill(cluster[i].Get_pixel_count());
 	}
 	sort(cluster.rbegin(), cluster.rend());
-	Long64_t pixel_max = cluster[0].Get_pixel_count();
-	LoadTree(pixel_max);
-	fChain->GetEntry(pixel_max);
+	Long64_t pixel_max = cluster[0].Get_eventnum();
+	Long64_t i_entry = LoadTree(pixel_max);
+	GetEntry(pixel_max);
+	TH1D *hist = new TH1D("hist", "1D Histogram;X;Entries", 100, 700, 1800);
+	create_1Dhist(hist, weight, ADC);
+	//閾値の設定
+	threshold = hist->GetMean() + 5 * hist->GetStdDev(); 
+	delete hist;
+	hist = nullptr;
 	for(int i = x_min; i < x_max; i++){
 		for(int j = y_min; j < y_max; j++){
 			if(weight[i][j]){
@@ -85,9 +88,9 @@ void MyClass::Find_AutoCluster(bool opt_sub){
 			}
 		}
 	}
-	h1->SetFillColor(kBlue);
-	h2->SetFillColor(kBlue);
-	h3->SetFillColor(kBlue);
+	h1->SetFillColor(kAzure-9);
+	h2->SetFillColor(kGreen-9);
+	h3->SetFillColor(kPink-9);
 	// pixel_maxの情報を追加
     TText *text = new TText(0, -15, Form("max_event:%lld", pixel_max));
 	c1->cd(1); h1->Draw("");
