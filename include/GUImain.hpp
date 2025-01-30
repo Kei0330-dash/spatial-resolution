@@ -29,7 +29,7 @@ public:
 private:
     TGNumberEntry *numEntry;
     TGCheckButton *Option_Red;
-    TGCheckButton *Option_Substract;
+    TGCheckButton *Option_Subtract;
     TGCheckButton *Option_Fitting;
     TGTextButton *Run_analysis;
 	TGTextButton *SearchCluster_Button;

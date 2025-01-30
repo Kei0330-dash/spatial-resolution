@@ -88,7 +88,7 @@ namespace ROOT {
       ::MyClass *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::MyClass));
       static ::ROOT::TGenericClassInfo 
-         instance("MyClass", "include/MyClass.hpp", 17,
+         instance("MyClass", "include/MyClass.hpp", 18,
                   typeid(::MyClass), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &MyClass_Dictionary, isa_proxy, 4,
                   sizeof(::MyClass) );

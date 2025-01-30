@@ -64,6 +64,19 @@ void Fill_2Dhist(TH2D* &h2, ADC_DATA &weight){
 		}
 	}
 }
+ADC_DATA pedestal_subtract(ADC_DATA weight, double threshold, bool opt_sub){
+	if(!opt_sub) return weight;
+	for(Long64_t i = x_min; i < x_max; i++){
+		for(Long64_t j = y_min; j < y_max; j++){
+			if((UShort_t)threshold < weight[i][j]){
+				weight[i][j] -= (UShort_t)threshold;
+			}
+			else{ 
+				weight[i][j] = 0;
+			}
+		}
+	}
+}
 
 THRESHOLD_MAP create_map(ADC_DATA &weight, double threshold, bool opt_sub){
 	THRESHOLD_MAP map(x_max - x_min, std::vector<char>(y_max - y_min));
@@ -90,6 +103,7 @@ int call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, bool o
 		for(int j = y_min; j < y_max; j++){
 			if(map[i][j] == 'W'){
 				block tmp = dfs(i, j, map);
+				tmp.Set_eventnum(event_num);
 				if(tmp.flag) cluster.push_back(tmp);
 				else{if(opt_sub)weight[i][j] = 0, count--;}
 				count++;
@@ -258,7 +272,7 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 ADC_DATA MyClass::Get_ADC(Int_t entry_num){
 	Long64_t nentries;
 	//エントリー数を指定する
-	if (fChain == nullptr) return;
+	// if (fChain == nullptr) return;
 	nentries = fChain->GetEntriesFast();
 	fChain->GetEntry(entry_num);
 
@@ -278,7 +292,7 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 	CLUSTER_DATA cluster;
 
 	//1次元ヒストグラムの作成
-	TH1D *h1 = new TH1D("h1", "1D Histogram;X;Entries", 100, 1000, 1500);
+	TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 100, 1000, 1500);
 	Fill_1Dhist(h1, weight);
 	TCanvas *hist1D = new TCanvas("hist1D", "1D Histogram", 600, 400);
 	h1->Draw();
@@ -290,7 +304,7 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 
 	//2次元マップの作成
 	map = create_map(weight, threshold, opt_sub);
-	std::cout << "Cluster count: " << call_dfs(map, cluster, weight, opt_sub) << std::endl;
+	std::cout << "Cluster count: " << call_dfs(map, cluster, weight, opt_sub, 0) << std::endl;//0は一時的な修正
 
 	//クラスターがある場合、重心を求める
 	if(!cluster.empty()){
@@ -301,12 +315,13 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 	}
 
 	//2次元ヒストグラムの作成
-	TH2D *h2 = new TH2D("h2", "2D Histogram;X;Y", (x_max - x_min), x_min, x_max, (y_max - y_min), y_min, y_max);
+	TH2D *h2 = new TH2D("h2", "Pixel Distribution;X;Y", (x_max - x_min), x_min, x_max, (y_max - y_min), y_min, y_max);
 	h2->Sumw2();
+	h2->SetStats(0);
 	Fill_2Dhist(h2, weight);
 
 	//閾値を超えた部分を強調表示
-	TCanvas *hist2D = new TCanvas("hist2D", "2D Histogram", 650, 700);
+	TCanvas *hist2D = new TCanvas("hist2D", "2D Histogram", 600, 400);
 	// hist2D->Divide(1, 2);
 	// hist2D->cd(1);
 	h2->Draw("COLZ");
@@ -320,27 +335,29 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 第一引数はeventのどこを参照するか選ぶ。第二引数は、クラスターの強調表示をするかを選ぶ。第三引数はペデスタルの減算するかを選ぶ。
 第四引数はフィッテイングするかを選ぶ。*/
 void runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit, bool opt_AutoCluster, TString path) {
-   MyClass *myobj = nullptr;
-   p.pointer_delete(); // 共有ポインタの解放
-   if(!file){
-      file = TFile::Open(path);
-      if (!file || file->IsZombie()) {
-         std::cerr << "Error opening file" << std::endl;
-         return;
-      }
-   }
+	MyClass *myobj = nullptr;
+	p.pointer_delete(); // 共有ポインタの解放
+	if(!file){
+		file = TFile::Open(path);
+		if (!file || file->IsZombie()) {
+			std::cerr << "Error opening file" << std::endl;
+			return;
+		}
+	}
 
-   TTree *SOFIST_Data = (TTree*)file->Get("SOFIST_Data");
-   myobj = new MyClass(SOFIST_Data);
-   if(!opt_AutoCluster){
-   myobj->Loop(event_num, opt_Red, opt_sub, opt_fit);
-   }
-   else{
-	myobj->Find_AutoCluster(opt_sub);
-   }
+	TTree *SOFIST_Data = (TTree*)file->Get("SOFIST_Data");
+	myobj = new MyClass(SOFIST_Data);
+	if(!opt_AutoCluster){
+		ADC_DATA data = myobj->Get_ADC(event_num);
+		// myobj->Loop(event_num, opt_Red, opt_sub, opt_fit);
+		AnalyzeAndVisualizeClusters(data, opt_Red, opt_sub, opt_fit);
+	}
+	else{
+		myobj->Find_AutoCluster(opt_sub);
+	}
 //    myobj->Loop(event_num, opt_Red, opt_sub, opt_fit);
-	ADC_DATA data = myobj->Get_ADC(event_num);
-	AnalyzeAndVisualizeClusters(data, opt_Red, opt_sub, opt_fit);
+	// ADC_DATA data = myobj->Get_ADC(event_num);
+	// AnalyzeAndVisualizeClusters(data, opt_Red, opt_sub, opt_fit);
    delete myobj;
 }
 

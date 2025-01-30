@@ -1,3 +1,5 @@
+#include "../include/alias.hpp"
+#include "../include/block.hpp"
 #include "../include/MyClass.hpp"
 #include "../include/analysis.hpp"
 #include <TApplication.h>
@@ -22,30 +24,26 @@ const Int_t x_min = 0, x_max = 128,
 			
 void MyClass::Find_AutoCluster(bool opt_sub){
 	//使用する変数。
-	std::vector<std::vector<char>> map(x_max, std::vector<char>(y_max));
+	THRESHOLD_MAP map(x_max, std::vector<char>(y_max));
 	double threshold;
-	std::vector<block> cluster;
+	CLUSTER_DATA cluster;
 	Long64_t nentries;
-	std::vector<std::vector<UShort_t>> weight(128, std::vector<UShort_t>(128));
+	ADC_DATA weight(128, std::vector<UShort_t>(128));
 	//クラスターがあるエントリーナンバーを全て返す
 	std::vector<std::pair<int,int>> res(1000);
 	// エントリー数の数だけ、走査
 	if (fChain == nullptr) return ;
 	nentries = fChain->GetEntriesFast();
 	for(Long64_t entry_num = 0; entry_num < 1000; entry_num++){
-		//ientryに、TChainの中でjentryを含むtreeの番号をいれる
-		Long64_t ientry = LoadTree(entry_num);
-		//もしもjentryを含むtreeが存在しなければbreak
-		if (ientry < 0) break;
-		GetEntry(entry_num);
+		weight = Get_ADC(entry_num);
 
 		TH1D *hist = new TH1D("hist", "1D Histogram;X;Entries", 100, 700, 1800);
-		create_1Dhist(hist, weight, ADC);
+		Fill_1Dhist(hist, weight);
 		//閾値の設定
 		threshold = hist->GetMean() + 5 * hist->GetStdDev(); 
 		delete hist;
 		hist = nullptr;
-		create_map(map, weight, threshold, opt_sub);
+		map = create_map(weight, threshold, opt_sub);
 
 		int ans = call_dfs(map, cluster, weight, opt_sub, entry_num);
 
@@ -73,10 +71,9 @@ void MyClass::Find_AutoCluster(bool opt_sub){
 	}
 	sort(cluster.rbegin(), cluster.rend());
 	Long64_t pixel_max = cluster[0].Get_eventnum();
-	Long64_t i_entry = LoadTree(pixel_max);
-	GetEntry(pixel_max);
+	weight = Get_ADC(pixel_max);
 	TH1D *hist = new TH1D("hist", "1D Histogram;X;Entries", 100, 700, 1800);
-	create_1Dhist(hist, weight, ADC);
+	Fill_1Dhist(hist, weight);
 	//閾値の設定
 	threshold = hist->GetMean() + 5 * hist->GetStdDev(); 
 	delete hist;
@@ -91,11 +88,13 @@ void MyClass::Find_AutoCluster(bool opt_sub){
 	h1->SetFillColor(kAzure-9);
 	h2->SetFillColor(kGreen-9);
 	h3->SetFillColor(kPink-9);
+	
+	TText *text3 = new TText(50, (h3->GetMaximum()), "Separated every 10 events");
 	// pixel_maxの情報を追加
-    TText *text = new TText(0, -15, Form("max_event:%lld", pixel_max));
+    TText *text4 = new TText(0, -15, Form("max_event:%lld", pixel_max));
 	c1->cd(1); h1->Draw("");
 	c1->cd(2); h2->Draw("");
-	c1->cd(3); h3->Sumw2(0); h3->Draw("");
-	c1->cd(4); h4->Draw(""); text->Draw();
+	c1->cd(3); h3->Sumw2(0);  h3->Draw(""); text3->Draw();
+	c1->cd(4); h4->Draw(""); text4->Draw();
 	c1->Update();
 }

@@ -21,10 +21,10 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
     // チェックボックスを含む垂直フレームを作成
     TGVerticalFrame *checkBoxFrame = new TGVerticalFrame(mainFrame, 200, 100);
     Option_Red = new TGCheckButton(checkBoxFrame, "Option_Red");
-    Option_Substract = new TGCheckButton(checkBoxFrame, "Option_Substract");
+    Option_Subtract = new TGCheckButton(checkBoxFrame, "Option_Subtract");
     Option_Fitting = new TGCheckButton(checkBoxFrame, "Option_Fitting");
     checkBoxFrame->AddFrame(Option_Red, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
-    checkBoxFrame->AddFrame(Option_Substract, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
+    checkBoxFrame->AddFrame(Option_Subtract, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
     checkBoxFrame->AddFrame(Option_Fitting, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
     mainFrame->AddFrame(checkBoxFrame, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
 
@@ -112,7 +112,7 @@ bool MyMainFrame::Get_Option_Red() {
 }
 
 bool MyMainFrame::Get_Option_Substract() {
-    return Option_Substract->IsOn();
+    return Option_Subtract->IsOn();
 }
 
 bool MyMainFrame::Get_Option_Fitting() {

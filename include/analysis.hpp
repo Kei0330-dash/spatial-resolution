@@ -52,8 +52,9 @@ THRESHOLD_MAP create_map(ADC_DATA &weight, double threshold, bool opt_sub);
 /// @param cluster クラスターの塊の配列で、dfsで走査された結果がこの中に格納される。
 /// @param weight クラスターが単体だった場合その重みのデータは削除される。
 /// @param opt_sub ペデスタル減算をするかどうかのフラグ。
+/// @param event_num
 /// @return そのイベントのクラスターの数を出力する。
-int  call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, const bool opt_sub);
+int  call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, const bool opt_sub, int event_num);
 
 /// @brief この関数を起動すると、クラスターを強調表示します。
 /// @param weight 重みを基準にします。

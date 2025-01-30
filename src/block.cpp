@@ -3,30 +3,37 @@
 #include <TH1D.h>
 
 // クラスターのピクセルの数を出力する。
-int block::Get_pixel_count() {
+int block::Get_pixel_count() const{
     return place.size();
 }
+void block::Set_eventnum(int input){
+	event_num = input;
+}
 
-double block::Get_xcenter() { 
+int block::Get_eventnum() const{
+	return event_num;
+}
+
+double block::Get_xcenter() const{ 
 	return x_g;
 }
 
-double block::Get_ycenter() {
+double block::Get_ycenter() const{
 	return y_g;
 }
-double block::Get_ADCsum() {
+double block::Get_ADCsum() const{
 	return ADCsum;
 }
-double block::Get_xmin() {
+double block::Get_xmin() const{
 	return x_min;
 }
-double block::Get_xmax() {
+double block::Get_xmax() const{
 	return x_max;
 }
-double block::Get_ymin() {
+double block::Get_ymin() const{
 	return y_min;
 }
-double block::Get_ymax() {
+double block::Get_ymax() const{
 	return y_max;
 }
 // 重心を計算して返り値として pair の first に x 軸の重心の値、second に y 軸の重心の値を返す。
@@ -66,4 +73,8 @@ void block::Print_NormalDistribution(ADC_DATA &weight) {
     h1.Draw();
     c2.Update();
     c2.WaitPrimitive();
+}
+
+bool block::operator<(const block& other) const {
+	return Get_pixel_count() < other.Get_pixel_count();
 }
