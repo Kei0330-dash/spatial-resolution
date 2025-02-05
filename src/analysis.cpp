@@ -240,35 +240,6 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 
 }
 
-// std::vector<int> MyClass::Find_AutoCluster(){
-	// //使用する変数。
-	// THRESHOLD_MAP map(x_max, std::vector<char>(y_max));
-	// double threshold;
-	// CLUSTER_DATA cluster;
-	// Long64_t nentries;
-	// ADC_DATA weight(128, std::vector<UShort_t>(128));
-	// //クラスターがあるエントリーナンバーを全て返す
-	// std::vector<int> res;
-	// // エントリー数の数だけ、走査
-	// // if (fChain == nullptr) return res;
-	// nentries = fChain->GetEntries();
-	// for(int entry_num = 0; entry_num < nentries; entry_num++){
-	// 	fChain->GetEntry(entry_num);
-	// 	TH1D *h1 = new TH1D("h1", "1D Histogram;X;Entries", 100, 1000, 1500);
-	// 	create_1Dhist(h1, weight, ADC);
-	// 	//閾値の設定
-	// 	threshold = h1->GetMean() + 3 * h1->GetStdDev(); 
-	// 	create_map(map, weight, threshold, true);
-
-	// 	int ans = call_dfs(map, cluster, weight, true);
-
-	// 	if(ans <= 1){
-	// 		res.push_back(entry_num);
-	// 	}
-	// }
-	// return res;
-// }
-
 ADC_DATA MyClass::Get_ADC(Int_t entry_num){
 	Long64_t nentries;
 	//エントリー数を指定する
@@ -334,14 +305,14 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 /*Rootでこのコードを立ち上げたときはイベント数の引数を設定してこの関数を呼び出す。
 第一引数はeventのどこを参照するか選ぶ。第二引数は、クラスターの強調表示をするかを選ぶ。第三引数はペデスタルの減算するかを選ぶ。
 第四引数はフィッテイングするかを選ぶ。*/
-void runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit, bool opt_AutoCluster, TString path) {
+AnalyzeType runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit, bool opt_AutoCluster, TString path) {
 	MyClass *myobj = nullptr;
 	p.pointer_delete(); // 共有ポインタの解放
 	if(!file){
 		file = TFile::Open(path);
 		if (!file || file->IsZombie()) {
 			std::cerr << "Error opening file" << std::endl;
-			return;
+			return ANALYZE_ERROR;
 		}
 	}
 
@@ -351,20 +322,25 @@ void runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit, bool 
 		ADC_DATA data = myobj->Get_ADC(event_num);
 		// myobj->Loop(event_num, opt_Red, opt_sub, opt_fit);
 		AnalyzeAndVisualizeClusters(data, opt_Red, opt_sub, opt_fit);
+		delete myobj;
+		return ANALYZE_ONE_EVENT;
 	}
 	else{
 		myobj->Find_AutoCluster(opt_sub);
+		delete myobj;
+		return ANALYZE_ALL_CLUSTERS;
 	}
 //    myobj->Loop(event_num, opt_Red, opt_sub, opt_fit);
 	// ADC_DATA data = myobj->Get_ADC(event_num);
 	// AnalyzeAndVisualizeClusters(data, opt_Red, opt_sub, opt_fit);
-   delete myobj;
 }
 
 void closefile(){
-   file->Close();
-   delete file;
-   file = nullptr;
+	if(file->IsOpen()){	
+	file->Close();
+	delete file;
+	file = nullptr;
+	}
 }
 
 void run_100(int start, bool opt_Red, bool opt_sub){

@@ -1,6 +1,7 @@
 #ifndef GUIMAIN_HPP
 #define GUIMAIN_HPP
 
+#include "../include/alias.hpp"
 #include <iostream>  // std::coutを使用するために追加
 #include <TGButton.h>
 #include <TGNumberEntry.h>
@@ -22,7 +23,7 @@ public:
     void CloseWindow();
     int Get_Entry_num();
     bool Get_Option_Red();
-    bool Get_Option_Substract();
+    bool Get_Option_Subtract();
     bool Get_Option_Fitting();
 	TString Get_EnteredPath();
 
@@ -35,6 +36,7 @@ private:
 	TGTextButton *SearchCluster_Button;
 	TGTextButton *Open_file;
 	TGTextEntry *pathEntry;
+	AnalyzeType state = NO_ACTION;
     ClassDef(MyMainFrame, 0);
 };
 

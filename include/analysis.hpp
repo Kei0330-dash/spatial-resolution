@@ -77,7 +77,8 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red = false, bool opt
 /// @param opt_fit フィッティングをするかを選ぶ。
 /// @param opt_AutoCluster オートでクラスターがあるかどうかを判定します。他の引数に左右されません
 /// @param path データのパスを入力します。デフォルトで選ばれている引数を変更して自分の環境に合わせたパスを入力してください。
-void runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false, bool opt_AutoCluster = false, TString path = "/home/otokun241/newRepository/data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
+/// @return どの解析を行ったかを返します。
+AnalyzeType runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false, bool opt_AutoCluster = false, TString path = "/home/otokun241/newRepository/data/SOFIST3_DATA_HV130_chip1_alpha_241009.root");
 
 void closefile();
 
