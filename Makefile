@@ -4,7 +4,7 @@ CXXFLAGS = -std=c++11 $(shell root-config --cflags)
 LDFLAGS = $(shell root-config --glibs)
 
 # ソースファイルとオブジェクトファイル
-SOURCES = src/GUImain.cpp build/GUI_Dict.cpp src/analysis.cpp src/Find_AutoCluster.cpp src/block.cpp
+SOURCES = src/GUImain.cpp build/GUI_Dict.cpp src/analysis.cpp src/Find_AutoCluster.cpp src/block.cpp src/MyClass.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
 # 実行ファイル

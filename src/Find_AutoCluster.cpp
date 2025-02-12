@@ -75,7 +75,7 @@ void MyClass::Find_AutoCluster(bool opt_sub){
 	TH1D *hist = new TH1D("hist", "1D Histogram;X;Entries", 100, 700, 1800);
 	Fill_1Dhist(hist, weight);
 	//閾値の設定
-	threshold = hist->GetMean() + 5 * hist->GetStdDev(); 
+	threshold = hist->GetMean() + 3 * hist->GetStdDev(); 
 	delete hist;
 	hist = nullptr;
 	for(int i = x_min; i < x_max; i++){
@@ -97,4 +97,5 @@ void MyClass::Find_AutoCluster(bool opt_sub){
 	c1->cd(3); h3->Sumw2(0);  h3->Draw(""); text3->Draw();
 	c1->cd(4); h4->Draw(""); text4->Draw();
 	c1->Update();
+	Position_Resolution(cluster);
 }

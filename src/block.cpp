@@ -2,6 +2,14 @@
 #include <TCanvas.h>
 #include <TH1D.h>
 
+block::block(){
+
+}
+
+block::block(ADC_DATA &weight){
+	center_of_gravity(weight);
+}
+
 // クラスターのピクセルの数を出力する。
 int block::Get_pixel_count() const{
     return place.size();
@@ -45,7 +53,7 @@ std::pair<double, double> block::center_of_gravity(ADC_DATA &weight) {
         y_g += weight[a.first][a.second] * a.second;
         ADCsum += static_cast<double>(weight[a.first][a.second]);
     }
-    std::cout << "ADC合計値:" << ADCsum << "\n";
+    // std::cout << "ADC合計値:" << ADCsum << "\n";
     x_g = x_g / ADCsum;
     y_g = y_g / ADCsum;
     res.first = x_g;

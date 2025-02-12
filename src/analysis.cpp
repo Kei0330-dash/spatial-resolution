@@ -104,7 +104,8 @@ int call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, bool o
 			if(map[i][j] == 'W'){
 				block tmp = dfs(i, j, map);
 				tmp.Set_eventnum(event_num);
-				if(tmp.flag) cluster.push_back(tmp);
+				tmp.center_of_gravity(weight);
+				if(1) cluster.push_back(tmp);
 				else{if(opt_sub)weight[i][j] = 0, count--;}
 				count++;
 			}
@@ -240,21 +241,6 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 
 }
 
-ADC_DATA MyClass::Get_ADC(Int_t entry_num){
-	Long64_t nentries;
-	//エントリー数を指定する
-	// if (fChain == nullptr) return;
-	nentries = fChain->GetEntriesFast();
-	fChain->GetEntry(entry_num);
-
-	ADC_DATA res(128, std::vector<UShort_t>(128));
-	for(int i = 0; i < 128; i++){
-		for(int j = 0; j < 128; j++){
-			res[i][j] = ADC[i][j];
-		}
-	}
-	return res;
-}
 
 void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bool opt_fit){
 	//使用する変数。
@@ -270,7 +256,7 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 	hist1D->Update();
 
 	//閾値の設定
-	threshold = h1->GetMean() + 3 * h1->GetStdDev();
+	threshold = h1->GetMean() + 5 * h1->GetStdDev();
 	std::cout << "Threshold: " << threshold << std::endl;
 
 	//2次元マップの作成
@@ -280,7 +266,9 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 	//クラスターがある場合、重心を求める
 	if(!cluster.empty()){
 		for(int i = 0; i < cluster.size(); i++){
-			std::pair<double, double> ans = cluster[i].center_of_gravity(weight);
+			std::pair<double, double> ans;
+			ans.first = cluster[i].Get_xcenter();
+			ans.second = cluster[i].Get_ycenter();
 			std::cout << "Center of gravity: " << ans.first << ", " << ans.second << std::endl;
 		}
 	}
@@ -302,9 +290,36 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 
 }
 
-/*Rootでこのコードを立ち上げたときはイベント数の引数を設定してこの関数を呼び出す。
-第一引数はeventのどこを参照するか選ぶ。第二引数は、クラスターの強調表示をするかを選ぶ。第三引数はペデスタルの減算するかを選ぶ。
-第四引数はフィッテイングするかを選ぶ。*/
+void Position_Resolution(CLUSTER_DATA data){
+	int size = data.size();
+	TH2D *pixels_pos = new TH2D("h2", "Position_Resolution", 30, 0, 30, 30, 0, 30);
+	for(int i = 0; i < size; i++){
+		std::pair<double, double> grav;
+		grav.first = data[i].Get_xcenter();
+		grav.second = data[i].Get_ycenter();
+		//SOFIST3の30umの位置情報に変換
+		std::pair<int, int> pos;
+		pos.first = (grav.first + 0.5) * 30;
+		pos.second = (grav.second + 0.5) * 30;
+		//剰余計算をし、行と列のどこに格納されるか計算。
+		pos.first = pos.first % 30; 
+		pos.second = pos.second % 30;
+
+		pixels_pos->Fill(pos.first, pos.second);
+	}
+	TCanvas *c1 = new TCanvas("hist2D", "Position_Resolution", 600, 800);
+	c1->Divide(1,2);
+	c1->cd(1);
+	pixels_pos->Draw("COLZ");
+	c1->cd(2);
+	TH1D *projX = new TH1D("projx", "projectionX", 30, 0, 30);
+	projX = pixels_pos->ProjectionX();
+	projX->Sumw2(0);
+	projX->Draw();
+	c1->Update();
+}
+
+
 AnalyzeType runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit, bool opt_AutoCluster, TString path) {
 	MyClass *myobj = nullptr;
 	p.pointer_delete(); // 共有ポインタの解放

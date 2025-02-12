@@ -5,6 +5,9 @@
 
 class block{
 public:
+	block();
+	//重心を求めた状態で初期化
+	block(ADC_DATA &weight);
     bool flag = false;
     std::set<std::pair<int, int>> place;
     int Get_pixel_count() const;
@@ -24,10 +27,10 @@ public:
     bool operator<(const block& other) const;
 
 private:
-    int i;
-    double x_g, y_g, ADCsum;
+    int i = 0;
+    double x_g = 0.0, y_g = 0.0, ADCsum = 0.0;
 	int x_min = 0, x_max = 128, y_min = 0, y_max = 128;
-	int event_num;
+	int event_num = 0;
 };
 
 #endif

@@ -70,6 +70,8 @@ void highlight(ADC_DATA &weight, TBox* &box, double threshold, bool opt_sub);
 /// @param opt_fit 
 void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red = false, bool opt_sub = false, bool opt_fit = false);
 
+void Position_Resolution(CLUSTER_DATA data);
+
 /// @brief root -l analysis.cppをターミナルでやって読み込んだ時、まずこの関数を呼び出します。
 /// @param event_num eventのエントリー数を選ぶ
 /// @param opt_Red クラスターを強調表示するかを選ぶ。
