@@ -6,7 +6,8 @@
 #include <TH2.h>
 #include <TStyle.h>
 #include <TCanvas.h>
-#include <TBox.h>
+#include <TF2.h>
+#include <TLine.h>
 #include <iostream>
 #include <stack>
 #include <set>
@@ -14,7 +15,6 @@
 #include <chrono>
 #include <string>
 #include <limits>
-#include <TF2.h>
 #include <algorithm>
 //2次元ヒストグラムの最小値から最大値
 const int x_min = 0, x_max = 128,
@@ -115,15 +115,39 @@ int call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, bool o
 	return count;
 }
 
-void highlight(ADC_DATA &weight, TBox* &box, double threshold, bool opt_sub){
+void highlight(std::vector<TLine*> &lines, THRESHOLD_MAP map){
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
-			if(0 < weight[i][j] && opt_sub ||(u_short)threshold < weight[i][j]){
-				box = new TBox(i, j, i+1, j+1);
-				box->SetLineColor(kRed);
-				box->SetLineWidth(2);
-				box->SetFillStyle(0); // 塗りつぶしなし
-				box->Draw("same");
+			//閾値を超えているかの条件
+			if(map[i][j] == 'W'){
+				//線を引く基準を決める条件達
+				int dx[4] = {-1, 0, 0, 1}; int dy[4] = {0, -1, 1, 0};
+				for(int k = 0; k < 4; k++){
+					int nx = i + dx[k]; int ny = j + dy[k];
+					if(x_min <= nx && nx < x_max && y_min <= ny && ny < y_max && map[nx][ny] != 'W'){
+						TLine *line;
+						switch (k){
+							case 0:{
+								line = new TLine(i, j, i, j + 1);
+								break;
+							}
+							case 1:{
+								line = new TLine(i, j, i + 1, j);
+								break;
+							}
+							case 2:{
+								line = new TLine(i + 1, j, i + 1, j + 1);
+								break;
+							}
+							
+							default:{
+								line = new TLine(i, j + 1, i + 1, j + 1);
+								break;
+							}
+							lines.push_back(line); // TLineオブジェクトをリストに追加
+						}
+					}
+				}
 			}
 		}
 	}
@@ -242,9 +266,9 @@ void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 
 }
 
-
 void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bool opt_fit){
 	//使用する変数。
+	THRESHOLD_MAP original_map(x_max - x_min, std::vector<char>(y_max - y_min));
 	THRESHOLD_MAP map(x_max - x_min, std::vector<char>(y_max - y_min));
 	double threshold;
 	CLUSTER_DATA cluster;
@@ -261,7 +285,8 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 	std::cout << "Threshold: " << threshold << std::endl;
 
 	//2次元マップの作成
-	map = create_map(weight, threshold, opt_sub);
+	original_map = create_map(weight, threshold, opt_sub);
+	map = original_map;
 	std::cout << "Cluster count: " << call_dfs(map, cluster, weight, opt_sub, 0) << std::endl;//0は一時的な修正
 
 	//クラスターがある場合、重心を求める
@@ -285,9 +310,18 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 	// hist2D->Divide(1, 2);
 	// hist2D->cd(1);
 	h2->Draw("COLZ");
-	TBox *box = nullptr;
-	if(opt_Red) highlight(weight, box, threshold, opt_sub);
-	p.pointer_share(h1, h2, box, hist2D);
+	std::vector<TLine*> lines;
+	if(opt_Red) highlight(lines, original_map);
+	// すべてのラインを描画
+    for(TLine* line : lines) {
+		line->SetLineColor(kRed);
+        line->SetLineWidth(2);
+        line->Draw("same");
+    }
+
+
+	hist2D->Update();
+	// p.pointer_share(h1, h2, box, hist2D);
 
 }
 
