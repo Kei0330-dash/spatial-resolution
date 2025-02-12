@@ -40,4 +40,4 @@ private:
     ClassDef(MyMainFrame, 0);
 };
 
-#endif // GUI_H
+#endif // GUIMAIN_HPP

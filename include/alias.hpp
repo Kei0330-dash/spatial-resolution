@@ -9,6 +9,7 @@
 class block;
 
 // エイリアスの定義
+
 /// @brief イベントの解析タイプを表す列挙型
 enum AnalyzeType {
 	/// @brief 単一イベント解析のフラグ
