@@ -23,11 +23,11 @@ const int x_min = 0, x_max = 128,
 all_delete p;
 TFile *file = nullptr;
 
-block dfs(int x, int y, THRESHOLD_MAP &map){
+block dfs(int x, int y, THRESHOLD_MAP &map, ADC_DATA &weight){
 	std::stack<std::pair<int, int>> st;
 	st.push({x, y});
 	block cluster;
-	cluster.place.insert({x, y});
+	cluster.insert_pixels(x, y, weight[x][y]);
 	while(!st.empty()){
 		/*2回以上dfsを実行したら、cluster.flagをtrueにして最後の結果を表示しない*/
 		auto[cx, cy] = st.top();
@@ -40,9 +40,9 @@ block dfs(int x, int y, THRESHOLD_MAP &map){
 				//2次元で作成したmapが範囲外でないときかつmapの値がWであればその座標でstackにpushする。
 				if(x_min <= nx && nx < x_max && y_min <= ny && ny < y_max && map[nx][ny] == 'W'){
 						cluster.flag = true;
-						cluster.place.insert({nx, ny});
+						cluster.insert_pixels(nx, ny, weight[nx][ny]);
 						st.push({nx, ny});
-					}
+				}
 			}
 		}
 	}
@@ -64,12 +64,13 @@ void Fill_2Dhist(TH2D* &h2, ADC_DATA &weight){
 		}
 	}
 }
+
 ADC_DATA pedestal_subtract(ADC_DATA weight, double threshold, bool opt_sub){
 	if(!opt_sub) return weight;
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
-			if((UShort_t)threshold < weight[i][j]){
-				weight[i][j] -= (UShort_t)threshold;
+			if((int)threshold < weight[i][j]){
+				weight[i][j] -= (int)threshold;
 			}
 			else{ 
 				weight[i][j] = 0;
@@ -82,10 +83,10 @@ THRESHOLD_MAP create_map(ADC_DATA &weight, double threshold, bool opt_sub){
 	THRESHOLD_MAP map(x_max - x_min, std::vector<char>(y_max - y_min));
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
-			if((UShort_t)threshold < weight[i][j]){
+			if((int)threshold < weight[i][j]){
 				map[i][j] = 'W';
 				if(opt_sub) 
-				weight[i][j] -= (UShort_t)threshold;
+				weight[i][j] -= (int)threshold;
 			}
 			else{ 
 				map[i][j] = '.';
@@ -102,10 +103,10 @@ int call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, bool o
 	for(int i = x_min; i < x_max; i++){
 		for(int j = y_min; j < y_max; j++){
 			if(map[i][j] == 'W'){
-				block tmp = dfs(i, j, map);
+				block tmp = dfs(i, j, map, weight);
 				tmp.Set_eventnum(event_num);
 				tmp.center_of_gravity(weight);
-				if(1) cluster.push_back(tmp);
+				if(tmp.Get_pixelsize() > 2) cluster.push_back(tmp);
 				else{if(opt_sub)weight[i][j] = 0, count--;}
 				count++;
 			}

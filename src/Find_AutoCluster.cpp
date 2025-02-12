@@ -28,13 +28,12 @@ void MyClass::Find_AutoCluster(bool opt_sub){
 	double threshold;
 	CLUSTER_DATA cluster;
 	Long64_t nentries;
-	ADC_DATA weight(128, std::vector<UShort_t>(128));
+	ADC_DATA weight(128, std::vector<int>(128));
 	//クラスターがあるエントリーナンバーを全て返す
-	std::vector<std::pair<int,int>> res(1000);
-	// エントリー数の数だけ、走査
-	if (fChain == nullptr) return ;
-	nentries = fChain->GetEntriesFast();
-	for(Long64_t entry_num = 0; entry_num < 1000; entry_num++){
+	nentries = Get_EntryMax();
+	std::vector<std::pair<int,int>> res(nentries);
+
+	for(Long64_t entry_num = 0; entry_num < nentries; entry_num++){
 		weight = Get_ADC(entry_num);
 
 		TH1D *hist = new TH1D("hist", "1D Histogram;X;Entries", 100, 700, 1800);
@@ -67,7 +66,7 @@ void MyClass::Find_AutoCluster(bool opt_sub){
 		}
 	}
 	for(int i = 0; i < cluster.size(); i++){
-		h2->Fill(cluster[i].Get_pixel_count());
+		h2->Fill(cluster[i].Get_pixelsize());
 	}
 	sort(cluster.rbegin(), cluster.rend());
 	Long64_t pixel_max = cluster[0].Get_eventnum();

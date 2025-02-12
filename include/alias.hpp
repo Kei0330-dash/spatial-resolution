@@ -23,7 +23,7 @@ enum AnalyzeType {
 };
 
 /// @brief 2次元のADC値を格納した配列
-using ADC_DATA = std::vector<std::vector<UShort_t>>;
+using ADC_DATA = std::vector<std::vector<int>>;
 /// @brief 2次元の配列として、閾値を超えたところを'W'、超えていないところを'.'で表現したもの
 using THRESHOLD_MAP = std::vector<std::vector<char>>;
 /// @brief クラスターの塊の情報を格納したもの
