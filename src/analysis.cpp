@@ -136,20 +136,26 @@ void highlight(std::vector<TLine*> &lines, THRESHOLD_MAP map){
 								break;
 							}
 							case 2:{
-								line = new TLine(i + 1, j, i + 1, j + 1);
+								line = new TLine(i, j + 1, i + 1, j + 1);
 								break;
 							}
 							
 							default:{
-								line = new TLine(i, j + 1, i + 1, j + 1);
+								line = new TLine(i + 1, j, i + 1, j + 1);
 								break;
 							}
-							lines.push_back(line); // TLineオブジェクトをリストに追加
 						}
+						lines.push_back(line); // TLineオブジェクトをリストに追加
 					}
 				}
 			}
 		}
+	}
+	// すべてのラインを描画
+	for(TLine* line : lines) {
+		line->SetLineColor(kRed);
+		line->SetLineWidth(2);
+		line->Draw("same");
 	}
 }
 
@@ -311,15 +317,9 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 	// hist2D->cd(1);
 	h2->Draw("COLZ");
 	std::vector<TLine*> lines;
-	if(opt_Red) highlight(lines, original_map);
-	// すべてのラインを描画
-    for(TLine* line : lines) {
-		line->SetLineColor(kRed);
-        line->SetLineWidth(2);
-        line->Draw("same");
-    }
-
-
+	if(opt_Red) {
+		highlight(lines, original_map);
+	}
 	hist2D->Update();
 	// p.pointer_share(h1, h2, box, hist2D);
 
