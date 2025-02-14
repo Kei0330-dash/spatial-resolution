@@ -37,7 +37,7 @@ private:
 	TGTextButton *Open_file;
 	TGTextEntry *pathEntry;
 	TGNumberEntry *thresholdEntry;
-
+	TGNumberEntry *ClusterFilterEntry;
 	AnalyzeType state = NO_ACTION;
     ClassDef(MyMainFrame, 0);
 };

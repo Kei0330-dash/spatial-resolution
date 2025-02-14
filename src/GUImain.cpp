@@ -62,19 +62,27 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
     SearchCluster_Button->Connect("Clicked()", "MyMainFrame", this, "SearchCluster()");
     Open_file->Connect("Clicked()", "MyMainFrame", this, "OpenFile()");
 
-	// Analysis Settings
+	// Parameter Settings
 
-	TGGroupFrame *SettingFrame_Analysis = new TGGroupFrame(mainFrame, "Analysis Settings");
-	TGHorizontalFrame *thresholdFrame = new TGHorizontalFrame(SettingFrame_Analysis, 200, 50);
+	TGGroupFrame *SettingFrame_Parameter = new TGGroupFrame(mainFrame, "Parameter Settings");
+	TGHorizontalFrame *thresholdFrame = new TGHorizontalFrame(SettingFrame_Parameter, 200, 50);
 	TGLabel *thresholdLabel = new TGLabel(thresholdFrame, "Threshold:    mean +");
 	thresholdEntry = new TGNumberEntry(thresholdFrame, 3.0, 9, -1);
 	TGLabel *thresholdLabel2 = new TGLabel(thresholdFrame, "sigma");
     thresholdFrame->AddFrame(thresholdLabel, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 10, 10, 5, 5));
     thresholdFrame->AddFrame(thresholdEntry, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
     thresholdFrame->AddFrame(thresholdLabel2, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 10, 10, 5, 5));
-    SettingFrame_Analysis->AddFrame(thresholdFrame, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
+    SettingFrame_Parameter->AddFrame(thresholdFrame, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
 
-	mainFrame->AddFrame(SettingFrame_Analysis, new TGLayoutHints(kLHintsExpandX | kLHintsLeft, 20, 20, 20, 20));
+
+	TGGroupFrame *Cluster_DefineFrame = new TGGroupFrame(SettingFrame_Parameter, "Clusters Define");
+	TGLabel *ClusterLabel = new TGLabel(Cluster_DefineFrame, "Filter by Cluster Pixel Size:");
+	ClusterFilterEntry = new TGNumberEntry(Cluster_DefineFrame, 1, 9, -1);
+	Cluster_DefineFrame->AddFrame(ClusterLabel, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 10, 10, 5, 5));
+	Cluster_DefineFrame->AddFrame(ClusterFilterEntry, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 10, 10, 5, 5));
+    SettingFrame_Parameter->AddFrame(Cluster_DefineFrame, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
+
+	mainFrame->AddFrame(SettingFrame_Parameter, new TGLayoutHints(kLHintsExpandX | kLHintsLeft, 20, 20, 20, 20));
 
 
     SetWindowName("Settings screen");

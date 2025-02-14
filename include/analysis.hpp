@@ -4,6 +4,13 @@
 #include "alias.hpp"
 #include "MyClass.hpp"
 #include "block.hpp"
+#include <TApplication.h>
+#include <TH2.h>
+#include <TStyle.h>
+#include <TCanvas.h>
+#include <TBox.h>
+#include <TF2.h>
+#include <TLine.h>
 #include <iostream>
 #include <stack>
 #include <set>
@@ -12,12 +19,6 @@
 #include <string>
 #include <limits>
 #include <algorithm>
-#include <TApplication.h>
-#include <TH2.h>
-#include <TStyle.h>
-#include <TCanvas.h>
-#include <TBox.h>
-#include <TF2.h>
 
 // ========================================================================================================
 // プロトタイプ宣言
@@ -57,11 +58,14 @@ THRESHOLD_MAP create_map(ADC_DATA &weight, double threshold, bool opt_sub);
 int  call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, const bool opt_sub, int event_num);
 
 /// @brief この関数を起動すると、クラスターを強調表示します。
-/// @param weight 重みを基準にします。
 /// @param box このclassに強調表示の情報がはいっています。
-/// @param threshold 閾値です。
-/// @param opt_sub 
-void highlight(ADC_DATA &weight, TBox* &box, double threshold, bool opt_sub);
+/// @param map クラスタの分布を引数とする
+void highlight(TBox* &box, THRESHOLD_MAP map);
+
+/// @brief この関数を起動すると、クラスターの外側を囲います。
+/// @param lines このclassに外側の線が入っている。
+/// @param map クラスタの分布を引数とする
+void highlight(std::vector<TLine*> &lines, THRESHOLD_MAP map);
 
 /// @brief 
 /// @param weight 
@@ -84,7 +88,6 @@ AnalyzeType runMyClass(Int_t event_num, bool opt_Red = false, bool opt_sub = fal
 
 void closefile();
 
-void run_100(int start, bool opt_Red = false, bool opt_sub = false);
 
 // ========================================================================================================
 
