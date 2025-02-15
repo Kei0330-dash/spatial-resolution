@@ -9,7 +9,6 @@ public:
 	block();
 	//重心を求めた状態で初期化
 	block(ADC_DATA &weight);
-    bool flag = false;
     int Get_pixelsize() const;
 	void   Set_eventnum(int input);
 	int    Get_eventnum() const;

@@ -6,13 +6,13 @@ class inparam{
 	public:
 	double num_sigma;
 	int filter_clusterSize;
-	bool opt_Red, opt_subtract, opt_Fitting;
+	bool opt_Red, opt_Subtract, opt_Fitting;
 	bool AutoCluster;
 	int num_entry;
 	public:
     // コンストラクタ
     inparam(double sigma, int clusterSize, bool red, bool subtract, bool fitting, bool autoCluster, int entry) 
-	: num_sigma(sigma), filter_clusterSize(clusterSize), opt_Red(red), opt_subtract(subtract), opt_Fitting(fitting), AutoCluster(autoCluster), num_entry(entry) {		
+	: num_sigma(sigma), filter_clusterSize(clusterSize), opt_Red(red), opt_Subtract(subtract), opt_Fitting(fitting), AutoCluster(autoCluster), num_entry(entry) {		
 	}
 };
 
