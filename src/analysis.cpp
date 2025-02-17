@@ -182,16 +182,20 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 	CLUSTER_DATA cluster;
 
 	//1次元ヒストグラムの作成
-	TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 100, 1000, 1500);
+	TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 1600, 0, 8000);
 	Fill_1Dhist(h1, weight);
 	TCanvas *hist1D = new TCanvas("hist1D", "1D Histogram", 600, 400);
 	h1->Draw();
-	hist1D->Update();
+	h1->GetXaxis()->SetRangeUser(h1->GetMean() - 6 * h1->GetStdDev(), h1->GetMean() + 6 * h1->GetStdDev());
 
 	//閾値の設定
-	threshold = h1->GetMean() + 5 * h1->GetStdDev();
+	threshold = h1->GetMean() + 3 * h1->GetStdDev();
 	std::cout << "Threshold: " << threshold << std::endl;
-
+	TLine* thre_line = new TLine(threshold, 0, threshold, 1.05 * h1->GetMaximum());
+	thre_line->SetLineColor(kRed - 9);
+	thre_line->SetLineWidth(2);
+	thre_line->Draw("same");
+	hist1D->Update();
 	//2次元マップの作成
 	original_map = create_map(weight, threshold, opt_sub);
 	map = original_map;

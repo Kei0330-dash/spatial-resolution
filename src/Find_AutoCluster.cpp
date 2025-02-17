@@ -39,7 +39,7 @@ void MyClass::Find_AutoCluster(bool opt_sub){
 		TH1D *hist = new TH1D("hist", "1D Histogram;X;Entries", 100, 700, 1800);
 		Fill_1Dhist(hist, weight);
 		//閾値の設定
-		threshold = hist->GetMean() + 5 * hist->GetStdDev(); 
+		threshold = hist->GetMean() + 3 * hist->GetStdDev(); 
 		delete hist;
 		hist = nullptr;
 		map = create_map(weight, threshold, opt_sub);
