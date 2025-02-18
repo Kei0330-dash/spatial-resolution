@@ -36,42 +36,12 @@
 
 // Header files passed as explicit arguments
 #include "include/GUImain.hpp"
-#include "include/analysis.hpp"
+#include "include/analysis_class.hpp"
 
 // Header files passed via #pragma extra_include
 
 // The generated code does not explicitly qualify STL entities
 namespace std {} using namespace std;
-
-namespace ROOT {
-   static void delete_MyMainFrame(void *p);
-   static void deleteArray_MyMainFrame(void *p);
-   static void destruct_MyMainFrame(void *p);
-   static void streamer_MyMainFrame(TBuffer &buf, void *obj);
-
-   // Function generating the singleton type initializer
-   static TGenericClassInfo *GenerateInitInstanceLocal(const ::MyMainFrame*)
-   {
-      ::MyMainFrame *ptr = nullptr;
-      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::MyMainFrame >(nullptr);
-      static ::ROOT::TGenericClassInfo 
-         instance("MyMainFrame", ::MyMainFrame::Class_Version(), "include/GUImain.hpp", 16,
-                  typeid(::MyMainFrame), ::ROOT::Internal::DefineBehavior(ptr, ptr),
-                  &::MyMainFrame::Dictionary, isa_proxy, 16,
-                  sizeof(::MyMainFrame) );
-      instance.SetDelete(&delete_MyMainFrame);
-      instance.SetDeleteArray(&deleteArray_MyMainFrame);
-      instance.SetDestructor(&destruct_MyMainFrame);
-      instance.SetStreamerFunc(&streamer_MyMainFrame);
-      return &instance;
-   }
-   TGenericClassInfo *GenerateInitInstance(const ::MyMainFrame*)
-   {
-      return GenerateInitInstanceLocal(static_cast<::MyMainFrame*>(nullptr));
-   }
-   // Static variable to force the class initialization
-   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal(static_cast<const ::MyMainFrame*>(nullptr)); R__UseDummy(_R__UNIQUE_DICT_(Init));
-} // end of namespace ROOT
 
 namespace ROOT {
    static TClass *MyClass_Dictionary();
@@ -118,6 +88,36 @@ namespace ROOT {
 
 } // end of namespace ROOT
 
+namespace ROOT {
+   static void delete_MyMainFrame(void *p);
+   static void deleteArray_MyMainFrame(void *p);
+   static void destruct_MyMainFrame(void *p);
+   static void streamer_MyMainFrame(TBuffer &buf, void *obj);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::MyMainFrame*)
+   {
+      ::MyMainFrame *ptr = nullptr;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::MyMainFrame >(nullptr);
+      static ::ROOT::TGenericClassInfo 
+         instance("MyMainFrame", ::MyMainFrame::Class_Version(), "include/GUImain.hpp", 18,
+                  typeid(::MyMainFrame), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::MyMainFrame::Dictionary, isa_proxy, 16,
+                  sizeof(::MyMainFrame) );
+      instance.SetDelete(&delete_MyMainFrame);
+      instance.SetDeleteArray(&deleteArray_MyMainFrame);
+      instance.SetDestructor(&destruct_MyMainFrame);
+      instance.SetStreamerFunc(&streamer_MyMainFrame);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::MyMainFrame*)
+   {
+      return GenerateInitInstanceLocal(static_cast<::MyMainFrame*>(nullptr));
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal(static_cast<const ::MyMainFrame*>(nullptr)); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
 //______________________________________________________________________________
 atomic_TClass_ptr MyMainFrame::fgIsA(nullptr);  // static to hold class pointer
 
@@ -153,6 +153,27 @@ TClass *MyMainFrame::Class()
    return fgIsA;
 }
 
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_MyClass(void *p) {
+      return  p ? new(p) ::MyClass : new ::MyClass;
+   }
+   static void *newArray_MyClass(Long_t nElements, void *p) {
+      return p ? new(p) ::MyClass[nElements] : new ::MyClass[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_MyClass(void *p) {
+      delete (static_cast<::MyClass*>(p));
+   }
+   static void deleteArray_MyClass(void *p) {
+      delete [] (static_cast<::MyClass*>(p));
+   }
+   static void destruct_MyClass(void *p) {
+      typedef ::MyClass current_t;
+      (static_cast<current_t*>(p))->~current_t();
+   }
+} // end of namespace ROOT for class ::MyClass
+
 //______________________________________________________________________________
 void MyMainFrame::Streamer(TBuffer &R__b)
 {
@@ -179,32 +200,11 @@ namespace ROOT {
    }
 } // end of namespace ROOT for class ::MyMainFrame
 
-namespace ROOT {
-   // Wrappers around operator new
-   static void *new_MyClass(void *p) {
-      return  p ? new(p) ::MyClass : new ::MyClass;
-   }
-   static void *newArray_MyClass(Long_t nElements, void *p) {
-      return p ? new(p) ::MyClass[nElements] : new ::MyClass[nElements];
-   }
-   // Wrapper around operator delete
-   static void delete_MyClass(void *p) {
-      delete (static_cast<::MyClass*>(p));
-   }
-   static void deleteArray_MyClass(void *p) {
-      delete [] (static_cast<::MyClass*>(p));
-   }
-   static void destruct_MyClass(void *p) {
-      typedef ::MyClass current_t;
-      (static_cast<current_t*>(p))->~current_t();
-   }
-} // end of namespace ROOT for class ::MyClass
-
 namespace {
   void TriggerDictionaryInitialization_GUI_Dict_Impl() {
     static const char* headers[] = {
 "include/GUImain.hpp",
-"include/analysis.hpp",
+"include/analysis_class.hpp",
 nullptr
     };
     static const char* includePaths[] = {
@@ -218,8 +218,8 @@ nullptr
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 extern int __Cling_AutoLoading_Map;
+class __attribute__((annotate("$clingAutoload$include/GUImain.hpp")))  MyClass;
 class __attribute__((annotate("$clingAutoload$include/GUImain.hpp")))  MyMainFrame;
-class __attribute__((annotate("$clingAutoload$include/analysis.hpp")))  MyClass;
 )DICTFWDDCLS";
     static const char* payloadCode = R"DICTPAYLOAD(
 #line 1 "GUI_Dict dictionary payload"
@@ -228,7 +228,7 @@ class __attribute__((annotate("$clingAutoload$include/analysis.hpp")))  MyClass;
 #define _BACKWARD_BACKWARD_WARNING_H
 // Inline headers
 #include "include/GUImain.hpp"
-#include "include/analysis.hpp"
+#include "include/analysis_class.hpp"
 
 #undef  _BACKWARD_BACKWARD_WARNING_H
 )DICTPAYLOAD";

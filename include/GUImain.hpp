@@ -1,7 +1,9 @@
 #ifndef GUIMAIN_HPP
 #define GUIMAIN_HPP
 
-#include "../include/alias.hpp"
+#include "alias.hpp"
+#include "param.hpp"
+#include "analysis_class.hpp"
 #include <iostream>  // std::coutを使用するために追加
 #include <TGButton.h>
 #include <TGNumberEntry.h>
@@ -25,7 +27,11 @@ public:
     bool Get_Option_Red();
     bool Get_Option_Subtract();
     bool Get_Option_Fitting();
+	double Get_SettingThreshold();
+	int Get_Filter_ClusterSize();
 	TString Get_EnteredPath();
+	param SettingParam();
+
 
 private:
     TGNumberEntry *numEntry;
@@ -39,6 +45,7 @@ private:
 	TGNumberEntry *thresholdEntry;
 	TGNumberEntry *ClusterFilterEntry;
 	AnalyzeType state = NO_ACTION;
+	analysis *ANA = nullptr;
     ClassDef(MyMainFrame, 0);
 };
 

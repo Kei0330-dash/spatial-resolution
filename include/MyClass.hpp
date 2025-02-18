@@ -36,10 +36,10 @@ public :
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
-   virtual void     Gaus2D_fitting(double x_center, double y_center, TH2D* h2);
+//    virtual void     Gaus2D_fitting(double x_center, double y_center, TH2D* h2);
    virtual void     Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit);
    //自動でクラスターがあるエントリー数を全て出力する関数
-   virtual void Find_AutoCluster(bool opt_sub);
+//    virtual void Find_AutoCluster(bool opt_sub);
    //ADC値を配列からvectorにして返す関数
    virtual ADC_DATA Get_ADC(Int_t event_num);
    virtual int      Get_EntryMax();

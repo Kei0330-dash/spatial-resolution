@@ -1,5 +1,6 @@
 #ifndef PARAM_HPP
 #define PARAM_HPP
+#include <TString.h>
 #include <utility>
 
 class inparam{
@@ -9,10 +10,11 @@ class inparam{
 	bool opt_Red, opt_Subtract, opt_Fitting;
 	bool AutoCluster;
 	int num_entry;
+	TString Enter_path;
 	public:
     // コンストラクタ
-    inparam(double sigma, int clusterSize, bool red, bool subtract, bool fitting, bool autoCluster, int entry) 
-	: num_sigma(sigma), filter_clusterSize(clusterSize), opt_Red(red), opt_Subtract(subtract), opt_Fitting(fitting), AutoCluster(autoCluster), num_entry(entry) {		
+    inparam(double sigma, int clusterSize, bool red, bool subtract, bool fitting, bool autoCluster, int entry, TString path) 
+	: num_sigma(sigma), filter_clusterSize(clusterSize), opt_Red(red), opt_Subtract(subtract), opt_Fitting(fitting), AutoCluster(autoCluster), num_entry(entry), Enter_path(path) {		
 	}
 };
 
@@ -29,8 +31,8 @@ class param{
 	inparam in;
 	int cluster_count;
 	outparam out;
-	param(double sigma, int clusterSize, bool red, bool subtract, bool fitting, bool autoCluster, int entry)
-	:in(sigma, clusterSize, red, subtract, fitting, autoCluster, entry), cluster_count(0){
+	param(double sigma, int clusterSize, bool red, bool subtract, bool fitting, bool autoCluster, int entry, TString path)
+	:in(sigma, clusterSize, red, subtract, fitting, autoCluster, entry, path), cluster_count(0){
 	}
 };
 #endif

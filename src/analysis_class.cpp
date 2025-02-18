@@ -19,7 +19,7 @@
 #include <limits>
 #include <algorithm>
 
-block analysis::dfs(int x, int y, THRESHOLD_MAP map){
+block analysis::dfs(int x, int y, THRESHOLD_MAP &map){
 	std::stack<std::pair<int, int>> st;
 	st.push({x, y});
 	block cluster;
@@ -101,7 +101,7 @@ int analysis::call_dfs(){
 				block tmp = dfs(i, j, map);
 				tmp.Set_eventnum(event_num);
 				tmp.center_of_gravity(weight);
-				if(tmp.Get_pixelsize() > 2) cluster.push_back(tmp);
+				if(tmp.Get_pixelsize() > FilterSIZE) cluster.push_back(tmp);
 				else{if(opt_subtract)weight[i][j] = 0, count--;}
 				count++;
 			}
@@ -177,7 +177,7 @@ void analysis::AnalyzeAndVisualizeClusters(){
 	hist1D->Update();
 
 	//閾値の設定
-	threshold = h1->GetMean() + 5 * h1->GetStdDev();
+	threshold = h1->GetMean() + num_sigma * h1->GetStdDev();
 	std::cout << "Threshold: " << threshold << std::endl;
 
 	//2次元マップの作成
@@ -213,11 +213,7 @@ void analysis::AnalyzeAndVisualizeClusters(){
 
 void analysis::Find_AutoCluster(MyClass* myobj){
 	//使用する変数。
-	THRESHOLD_MAP map(x_max, std::vector<char>(y_max));
-	double threshold;
-	CLUSTER_DATA cluster;
 	Long64_t nentries;
-	ADC_DATA weight(128, std::vector<int>(128));
 	//クラスターがあるエントリーナンバーを全て返す
 	nentries = myobj->Get_EntryMax();
 	std::vector<std::pair<int,int>> res(nentries);
@@ -228,19 +224,20 @@ void analysis::Find_AutoCluster(MyClass* myobj){
 		TH1D *hist = new TH1D("hist", "1D Histogram;X;Entries", 100, 700, 1800);
 		Fill_1Dhist(hist);
 		//閾値の設定
-		threshold = hist->GetMean() + 5 * hist->GetStdDev(); 
+		threshold = hist->GetMean() + num_sigma * hist->GetStdDev(); 
 		delete hist;
 		hist = nullptr;
-		map = create_map();
+		origin_map = create_map();
 
+		event_num = entry_num;
 		int ans = call_dfs();
 
 		res[entry_num] = std::make_pair(entry_num, ans); 
 		
 	}
-	TH1I *h1 = new TH1I("h1", "Number of Clusters per Event;Number of Clusters;Number of Events", 10, 0, 10);
-	TH1I *h2 = new TH1I("h2", "Cluster Size Distribution;Cluster Size;Number of Events", 100, 0, 100);
-	TH1I *h3 = new TH1I("h3", "Distribution of Clusters in number of Events;Entry num;Number of Events", 100, 0, 1000);
+	TH1D *h1 = new TH1D("h1", "Number of Clusters per Event;Number of Clusters;Number of Events", 1000, 0, 1000);
+	TH1D *h2 = new TH1D("h2", "Cluster Size Distribution;Cluster Size;Number of Events", 100, 0, 100);
+	TH1D *h3 = new TH1D("h3", "Distribution of Clusters in number of Events;Entry num;Number of Events", 100, 0, 1000);
 	TH2D *h4 = new TH2D("h4", "The Event with the Largest Pixel Size;X;y", (x_max - x_min) , x_min, x_max, (y_max - y_min), y_min, y_max);
 
 	// X軸とY軸のラベルから小数点を非表示に設定
@@ -263,7 +260,7 @@ void analysis::Find_AutoCluster(MyClass* myobj){
 	TH1D *hist = new TH1D("hist", "1D Histogram;X;Entries", 100, 700, 1800);
 	Fill_1Dhist(hist);
 	//閾値の設定
-	threshold = hist->GetMean() + 3 * hist->GetStdDev(); 
+	threshold = hist->GetMean() + num_sigma * hist->GetStdDev(); 
 	delete hist;
 	hist = nullptr;
 	for(int i = x_min; i < x_max; i++){
@@ -317,7 +314,19 @@ void analysis::Position_Resolution(){
 	c1->Update();
 }
 
+void analysis::read_param(param params){
+	opt_Red = params.in.opt_Red;
+	opt_subtract = params.in.opt_Subtract;
+	opt_Fitting = params.in.opt_Fitting;
+	opt_AutoCluster = params.in.AutoCluster;
+	event_num = params.in.num_entry;
+	path = params.in.Enter_path;
+	num_sigma = params.in.num_sigma;
+	FilterSIZE = params.in.filter_clusterSize;
+}
+
 AnalyzeType analysis::runMyClass(param params) {
+	read_param(params);
 	MyClass *myobj = nullptr;
 	if(!file){
 		file = TFile::Open(path);
@@ -337,7 +346,7 @@ AnalyzeType analysis::runMyClass(param params) {
 		return ANALYZE_ONE_EVENT;
 	}
 	else{
-		myobj->Find_AutoCluster(opt_subtract);
+		Find_AutoCluster(myobj);
 		delete myobj;
 		return ANALYZE_ALL_CLUSTERS;
 	}
@@ -350,4 +359,7 @@ void analysis::closefile(){
 	delete file;
 	file = nullptr;
 	}
+}
+
+analysis::analysis(){
 }
