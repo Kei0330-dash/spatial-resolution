@@ -189,7 +189,7 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 	h1->GetXaxis()->SetRangeUser(h1->GetMean() - 6 * h1->GetStdDev(), h1->GetMean() + 6 * h1->GetStdDev());
 
 	//閾値の設定
-	threshold = h1->GetMean() + 3 * h1->GetStdDev();
+	threshold = h1->GetMean() + 5 * h1->GetStdDev();
 	std::cout << "Threshold: " << threshold << std::endl;
 	TLine* thre_line = new TLine(threshold, 0, threshold, 1.05 * h1->GetMaximum());
 	thre_line->SetLineColor(kRed - 9);
