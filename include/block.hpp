@@ -9,7 +9,6 @@ public:
 	block();
 	//重心を求めた状態で初期化
 	block(ADC_DATA &weight);
-    bool flag = false;
     int Get_pixelsize() const;
 	void   Set_eventnum(int input);
 	int    Get_eventnum() const;
@@ -20,6 +19,7 @@ public:
 	double Get_xmax() const;
 	double Get_ymin() const;
 	double Get_ymax() const;
+	std::set<std::tuple<int, int, int>> Get_set() const;
 	void insert_pixels(int x, int y, int weight);
     std::pair<double, double> center_of_gravity(ADC_DATA &weight);
 	void Calculate_min_max();

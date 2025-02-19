@@ -40,7 +40,6 @@ block dfs(int x, int y, THRESHOLD_MAP &map, ADC_DATA &weight){
 				int nx = cx + dx, ny = cy + dy;
 				//2次元で作成したmapが範囲外でないときかつmapの値がWであればその座標でstackにpushする。
 				if(x_min <= nx && nx < x_max && y_min <= ny && ny < y_max && map[nx][ny] == 'W'){
-						cluster.flag = true;
 						cluster.insert_pixels(nx, ny, weight[nx][ny]);
 						st.push({nx, ny});
 				}

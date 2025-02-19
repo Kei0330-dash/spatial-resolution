@@ -51,6 +51,11 @@ double block::Get_ymax() const{
 	return y_max;
 }
 
+std::set<std::tuple<int, int, int>> block::Get_set() const{
+	return place;
+}
+
+
 void block::insert_pixels(int x, int y, int weight){
 	place.insert(std::make_tuple(x, y, weight));
 }
