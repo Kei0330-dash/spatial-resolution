@@ -168,7 +168,104 @@ void analysis::highlight(std::vector<TLine*> &lines){
 	}
 }
 
+void analysis::highlightv2(std::vector<TLine*> &lines){
+	int size = cluster.size();
+	for(int ci = 0; ci < size; ci++){
+		std::set<std::tuple<int, int, int>> place;
+		place = cluster[ci].Get_set();
+		for(auto &a: place){
+			int i = std::get<0>(a);
+			int j = std::get<1>(a);
+			//閾値を超えているかの条件
+			if(origin_map[i][j] == 'W'){
+				//線を引く基準を決める条件達
+				int dx[4] = {-1, 0, 0, 1}; int dy[4] = {0, -1, 1, 0};
+				for(int k = 0; k < 4; k++){
+					int nx = i + dx[k]; int ny = j + dy[k];
+					if(x_min <= nx && nx < x_max && y_min <= ny && ny < y_max && origin_map[nx][ny] != 'W'){
+						TLine *line;
+						switch (k){
+							case 0:{
+								line = new TLine(i, j, i, j + 1);
+								break;
+							}
+							case 1:{
+								line = new TLine(i, j, i + 1, j);
+								break;
+							}
+							case 2:{
+								line = new TLine(i, j + 1, i + 1, j + 1);
+								break;
+							}
+							
+							default:{
+								line = new TLine(i + 1, j, i + 1, j + 1);
+								break;
+							}
+						}
+						lines.push_back(line); // TLineオブジェクトをリストに追加
+					}
+				}
+			}
+		}
+	}
+	// すべてのラインを描画
+	for(TLine* line : lines) {
+		line->SetLineColor(kRed);
+		line->SetLineWidth(2);
+		line->Draw("same");
+	}
+}
+
 void analysis::AnalyzeAndVisualizeClusters(){
+	//1次元ヒストグラムの作成
+	TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 100, 1000, 1500);
+	p.share(h1);
+	Fill_1Dhist(h1);
+	TCanvas *hist1D = new TCanvas("hist1D", "1D Histogram", 600, 400);
+	p.share(hist1D);
+	h1->Draw();
+	hist1D->Update();
+
+	//閾値の設定
+	threshold = h1->GetMean() + num_sigma * h1->GetStdDev();
+	std::cout << "Threshold: " << threshold << std::endl;
+
+	//2次元マップの作成
+	origin_map = create_map();
+	std::cout << "Cluster count: " << call_dfs() << std::endl;//0は一時的な修正
+
+	//クラスターがある場合、重心を求める
+	if(!cluster.empty()){
+		for(int i = 0; i < cluster.size(); i++){
+			std::pair<double, double> ans;
+			ans.first = cluster[i].Get_xcenter();
+			ans.second = cluster[i].Get_ycenter();
+			std::cout << "Center of gravity: " << ans.first << ", " << ans.second << std::endl;
+		}
+	}
+
+	//2次元ヒストグラムの作成
+	TH2D *h2 = new TH2D("h2", "Pixel Distribution;X;Y", (x_max - x_min), x_min, x_max, (y_max - y_min), y_min, y_max);
+	p.share(h2);
+	h2->Sumw2();
+	h2->SetStats(0);
+	Fill_2Dhist(h2);
+
+	//閾値を超えた部分を強調表示
+	TCanvas *hist2D = new TCanvas("hist2D", "2D Histogram", 600, 400);
+	p.share(hist2D);
+	h2->Draw("COLZ");
+	std::vector<TLine*> lines;
+	p.share(lines);
+	if(opt_Red) {
+		highlightv2(lines);
+	}
+	hist2D->Update();
+
+}
+
+void analysis::AnalyzeAndVisualizeClusters(MyClass* myobj){
 	//1次元ヒストグラムの作成
 	TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 100, 1000, 1500);
 	p.share(h1);
@@ -359,8 +456,7 @@ AnalyzeType analysis::runMyClass(param params) {
 	TTree *SOFIST_Data = (TTree*)file->Get("SOFIST_Data");
 	myobj = new MyClass(SOFIST_Data);
 	if(!opt_AutoCluster){
-		ADC_DATA data = myobj->Get_ADC(event_num);
-		weight = data;
+		weight = myobj->Get_ADC(event_num);
 		AnalyzeAndVisualizeClusters();
 		delete myobj;
 		return ANALYZE_ONE_EVENT;
@@ -375,9 +471,9 @@ AnalyzeType analysis::runMyClass(param params) {
 
 void analysis::closefile(){
 	if(file->IsOpen()){	
-	file->Close();
-	delete file;
-	file = nullptr;
+		file->Close();
+		delete file;
+		file = nullptr;
 	}
 }
 
@@ -391,4 +487,10 @@ analysis::~analysis(){
 
 void analysis::clear_pointer(){
 	p.erase_pointer();
+}
+
+void analysis::init_DataStructure(){
+	cluster.clear();
+	weight.clear();
+	origin_map.clear();
 }

@@ -19,6 +19,7 @@ public:
 	double Get_xmax() const;
 	double Get_ymin() const;
 	double Get_ymax() const;
+	std::set<std::tuple<int, int, int>> Get_set() const;
 	void insert_pixels(int x, int y, int weight);
     std::pair<double, double> center_of_gravity(ADC_DATA &weight);
 	void Calculate_min_max();

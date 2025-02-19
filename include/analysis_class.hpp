@@ -42,6 +42,7 @@ class analysis{
 	THRESHOLD_MAP origin_map;
 	CLUSTER_DATA cluster;
 	double threshold;
+	std::vector<double> thresholds;
 	/// @brief 深さ優先探索を実行してクラスターの塊を走査する。ただし、直接呼ばずint call_dfs()を経由して呼び出すこと。
 	/// @param x ピクセルのx軸
 	/// @param y ピクセルのy軸
@@ -66,23 +67,35 @@ class analysis{
 	/// @brief この関数を起動すると、クラスターを強調表示します。
 	/// @param box このclassに強調表示の情報がはいっています。
 	void highlight(TBox* &box);
-	/// @brief この関数を起動すると、クラスターの外側を囲います。
+	/// @brief この関数を起動すると、クラスターの外側を囲います(現在非推奨)。
 	/// @param lines このclassに外側の線が入っている。
 	void highlight(std::vector<TLine*> &lines);
-	/// @brief ある1イベントを可視化する関数
+	/// @brief この関数を起動すると、クラスターの外側を囲います。
+	/// @param lines このclassに外側の線の情報が格納されている。
+	void highlightv2(std::vector<TLine*> &lines);
+	/// @brief ある1イベントをその1イベントの閾値で作成し可視化する関数
 	void AnalyzeAndVisualizeClusters();
+	/// @brief ある1イベントを全てのイベントの同じ座標のピクセルを用いて閾値を作成し、可視化する関数
+	/// @param myobj このクラスを用いて、全イベント分のデータを読み込むため必要。
+	void AnalyzeAndVisualizeClusters(MyClass* myobj);
+	/// @brief 左上からそれぞれクラスター数（青），クラスターサイズ（緑），10イベントごとのクラスター数（マゼンタ），クラスターサイズが一番大きかったイベントをプロットしたものを出力
+	/// @param myobj このクラスを用いて、全イベント分のデータを読み込むため必要。
 	void Find_AutoCluster(MyClass* myobj);
 	/// @brief 位置分解能を評価するための関数
 	void Position_Resolution();
-	//入力パラメータを読み込む
+	/// @brief 入力パラメータを読み込む
 	void read_param(param params);
+	/// @brief 出力パラメータを書き込む
 	void write_param(param &params);
 	public:
+	/// @brief コンストラクタ。特に処理はなし。なんか追加するようであれば。追加する
 	analysis();
+	/// @brief デストラクタ。ポインタを消去し、ファイルを閉じる。
 	~analysis();
 	AnalyzeType runMyClass(param params);
 	void closefile();
 	void clear_pointer();
+	void init_DataStructure();
 };
 
 // ========================================================================================================

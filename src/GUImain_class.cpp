@@ -175,9 +175,10 @@ void MyMainFrame::init_ANALYZE(){
 	if(ANA == nullptr){
 		ANA = new analysis();
 	}
-	else{
+	else if(state == ANALYZE_ONE_EVENT || state == ANALYZE_ALL_CLUSTERS){
 		ANA->clear_pointer();
 	}
+	ANA->init_DataStructure();
 }
 
 

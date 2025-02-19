@@ -30,32 +30,47 @@ void mem_root::share(std::vector<TLine*>lines){
 void mem_root::erase_pointer(){
 	if(!th1d.empty()){
 		for(auto& h1 : th1d){
-            delete h1;
+			if(h1){
+            	delete h1;
+				h1 = nullptr;
+			}
         }
         th1d.clear();
 	}
 	if(!th2d.empty()){
 		for(auto& h2 : th2d){
-            delete h2;
+			if(h2){
+            	delete h2;
+				h2 = nullptr;
+			}
         }
         th2d.clear();
 	}
 	if(!tcanvas.empty()){
 		for(auto& c1 : tcanvas){
-            delete c1;
+			if(c1){
+            	delete c1;
+				c1 = nullptr;
+			}
         }
         tcanvas.clear();
 	}
 	if(!tcanvas.empty()){
 		for(auto& t : ttext){
-            delete t;
+			if(t){
+            	delete t;
+				t = nullptr;
+			}
         }
         ttext.clear();
 	}
 	if(!tlines.empty()){
 		for(int i = 0; i < tlines.size(); i++){
 			for(auto& l : tlines[i]){
-				delete l;
+				if(l){
+					delete l;
+					l = nullptr;
+				}
         	}
 			tlines[i].clear();
 		}
