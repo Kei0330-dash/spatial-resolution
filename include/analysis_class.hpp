@@ -22,9 +22,7 @@
 #include <limits>
 #include <algorithm>
 
-// ========================================================================================================
-// プロトタイプ宣言
-// ========================================================================================================
+
 class analysis{
 	private:
 	const int x_min = 0, x_max = 128;
@@ -42,7 +40,7 @@ class analysis{
 	THRESHOLD_MAP origin_map;
 	CLUSTER_DATA cluster;
 	double threshold;
-	std::vector<double> thresholds;
+	std::vector<std::vector<double>> thresholds;
 	/// @brief 深さ優先探索を実行してクラスターの塊を走査する。ただし、直接呼ばずint call_dfs()を経由して呼び出すこと。
 	/// @param x ピクセルのx軸
 	/// @param y ピクセルのy軸
@@ -87,6 +85,12 @@ class analysis{
 	void read_param(param params);
 	/// @brief 出力パラメータを書き込む
 	void write_param(param &params);
+	/// @brief 1イベントのADC値を基に閾値を作成する
+	/// @param mean 平均値
+	/// @param stddev 標準偏差
+	/// @return 閾値を返す
+	double create_threshold(double mean, double stddev);
+
 	public:
 	/// @brief コンストラクタ。特に処理はなし。なんか追加するようであれば。追加する
 	analysis();

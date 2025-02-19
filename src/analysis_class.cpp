@@ -80,12 +80,12 @@ THRESHOLD_MAP analysis::create_map(){
 			if((int)threshold < weight[i][j]){
 				map[i][j] = 'W';
 				if(opt_subtract) 
-				weight[i][j] -= (int)threshold;
+					weight[i][j] -= (int)threshold;
 			}
 			else{ 
 				map[i][j] = '.';
 				if(opt_subtract) 
-				weight[i][j] = 0;
+					weight[i][j] = 0;
 			}
 		}
 	}
@@ -219,16 +219,18 @@ void analysis::highlightv2(std::vector<TLine*> &lines){
 
 void analysis::AnalyzeAndVisualizeClusters(){
 	//1次元ヒストグラムの作成
-	TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 100, 1000, 1500);
+	TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 1600, 0, 8000);
 	p.share(h1);
 	Fill_1Dhist(h1);
+	h1->GetXaxis()->SetRangeUser(h1->GetMean() - 6 * h1->GetStdDev(), h1->GetMean() + 6 * h1->GetStdDev());
+
 	TCanvas *hist1D = new TCanvas("hist1D", "1D Histogram", 600, 400);
 	p.share(hist1D);
 	h1->Draw();
 	hist1D->Update();
 
 	//閾値の設定
-	threshold = h1->GetMean() + num_sigma * h1->GetStdDev();
+	threshold = create_threshold(h1->GetMean(), h1->GetStdDev());
 	std::cout << "Threshold: " << threshold << std::endl;
 
 	//2次元マップの作成
@@ -267,16 +269,22 @@ void analysis::AnalyzeAndVisualizeClusters(){
 
 void analysis::AnalyzeAndVisualizeClusters(MyClass* myobj){
 	//1次元ヒストグラムの作成
-	TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 100, 1000, 1500);
+	TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 1600, 0, 8000);
 	p.share(h1);
-	Fill_1Dhist(h1);
+	int nentries = myobj->Get_EntryMax();
+	for(int i = 0; i < nentries; i++){
+		weight = myobj->Get_ADC(i);
+		Fill_1Dhist(h1);
+	}
+	h1->GetXaxis()->SetRangeUser(h1->GetMean() - 6 * h1->GetStdDev(), h1->GetMean() + 6 * h1->GetStdDev());
+
 	TCanvas *hist1D = new TCanvas("hist1D", "1D Histogram", 600, 400);
 	p.share(hist1D);
 	h1->Draw();
 	hist1D->Update();
 
 	//閾値の設定
-	threshold = h1->GetMean() + num_sigma * h1->GetStdDev();
+	threshold = create_threshold(h1->GetMean(), h1->GetStdDev());
 	std::cout << "Threshold: " << threshold << std::endl;
 
 	//2次元マップの作成
@@ -368,7 +376,7 @@ void analysis::Find_AutoCluster(MyClass* myobj){
 	p.share(hist);
 	Fill_1Dhist(hist);
 	//閾値の設定
-	threshold = hist->GetMean() + num_sigma * hist->GetStdDev(); 
+	threshold = create_threshold(hist->GetMean(), hist->GetStdDev()); 
 	for(int i = x_min; i < x_max; i++){
 		for(int j = y_min; j < y_max; j++){
 			if(weight[i][j]){
@@ -442,6 +450,18 @@ void analysis::read_param(param params){
 void analysis::write_param(param &params){
 }
 
+double analysis::create_threshold(double mean, double stddev){
+	return mean + num_sigma * stddev;
+}
+
+analysis::analysis(){
+}
+
+analysis::~analysis(){
+	clear_pointer();
+	closefile();
+}
+
 AnalyzeType analysis::runMyClass(param params) {
 	read_param(params);
 	MyClass *myobj = nullptr;
@@ -475,14 +495,6 @@ void analysis::closefile(){
 		delete file;
 		file = nullptr;
 	}
-}
-
-analysis::analysis(){
-}
-
-analysis::~analysis(){
-	clear_pointer();
-	closefile();
 }
 
 void analysis::clear_pointer(){
