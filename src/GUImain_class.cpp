@@ -98,15 +98,13 @@ MyMainFrame::~MyMainFrame() {
 
 void MyMainFrame::HandleButton() {
 	param params = SettingParam();
-	if(ANA == nullptr)
-		ANA = new analysis();
+	init_ANALYZE();
     state = ANA->runMyClass(params);
 }
 
 void MyMainFrame::SearchCluster() {
 	param params = SettingParam();
-	if(ANA == nullptr)
-		ANA = new analysis();
+	init_ANALYZE();
 	params.in.AutoCluster = true;
     state = ANA->runMyClass(params);
 }
@@ -171,6 +169,15 @@ param MyMainFrame::SettingParam(){
 
 	param params(Get_SettingThreshold(), Get_Filter_ClusterSize(), Get_Option_Red(), Get_Option_Subtract(), Get_Option_Fitting(), false, Get_Entry_num(), Get_EnteredPath());
 	return params;
+}
+
+void MyMainFrame::init_ANALYZE(){
+	if(ANA == nullptr){
+		ANA = new analysis();
+	}
+	else{
+		ANA->clear_pointer();
+	}
 }
 
 

@@ -5,6 +5,7 @@
 #include "MyClass.hpp"
 #include "block.hpp"
 #include "param.hpp"
+#include "mem_root.hpp"
 #include <TApplication.h>
 #include <TH2.h>
 #include <TStyle.h>
@@ -29,6 +30,7 @@ class analysis{
 	const int x_min = 0, x_max = 128;
 	const int y_min = 0, y_max = 128;
 	TFile *file = nullptr;
+	mem_root p;
 	//ユーザーによって設定された値
 	bool opt_Red, opt_subtract, opt_Fitting, opt_AutoCluster;
 	double num_sigma;
@@ -72,11 +74,15 @@ class analysis{
 	void Find_AutoCluster(MyClass* myobj);
 	/// @brief 位置分解能を評価するための関数
 	void Position_Resolution();
+	//入力パラメータを読み込む
 	void read_param(param params);
+	void write_param(param &params);
 	public:
 	analysis();
+	~analysis();
 	AnalyzeType runMyClass(param params);
 	void closefile();
+	void clear_pointer();
 };
 
 // ========================================================================================================

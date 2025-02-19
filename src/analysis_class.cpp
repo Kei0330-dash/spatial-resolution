@@ -171,8 +171,10 @@ void analysis::highlight(std::vector<TLine*> &lines){
 void analysis::AnalyzeAndVisualizeClusters(){
 	//1次元ヒストグラムの作成
 	TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 100, 1000, 1500);
+	p.share(h1);
 	Fill_1Dhist(h1);
 	TCanvas *hist1D = new TCanvas("hist1D", "1D Histogram", 600, 400);
+	p.share(hist1D);
 	h1->Draw();
 	hist1D->Update();
 
@@ -196,14 +198,17 @@ void analysis::AnalyzeAndVisualizeClusters(){
 
 	//2次元ヒストグラムの作成
 	TH2D *h2 = new TH2D("h2", "Pixel Distribution;X;Y", (x_max - x_min), x_min, x_max, (y_max - y_min), y_min, y_max);
+	p.share(h2);
 	h2->Sumw2();
 	h2->SetStats(0);
 	Fill_2Dhist(h2);
 
 	//閾値を超えた部分を強調表示
 	TCanvas *hist2D = new TCanvas("hist2D", "2D Histogram", 600, 400);
+	p.share(hist2D);
 	h2->Draw("COLZ");
 	std::vector<TLine*> lines;
+	p.share(lines);
 	if(opt_Red) {
 		highlight(lines);
 	}
@@ -236,14 +241,19 @@ void analysis::Find_AutoCluster(MyClass* myobj){
 		
 	}
 	TH1D *h1 = new TH1D("h1", "Number of Clusters per Event;Number of Clusters;Number of Events", 1000, 0, 1000);
+	p.share(h1);
 	TH1D *h2 = new TH1D("h2", "Cluster Size Distribution;Cluster Size;Number of Events", 100, 0, 100);
-	TH1D *h3 = new TH1D("h3", "Distribution of Clusters in number of Events;Entry num;Number of Events", 100, 0, 1000);
+	p.share(h2);
+	TH1D *h3 = new TH1D("h3", "Distribution of Clusters in number of Events;Entry num;Number of Events", nentries / 10, 0, nentries);
+	p.share(h3);
 	TH2D *h4 = new TH2D("h4", "The Event with the Largest Pixel Size;X;y", (x_max - x_min) , x_min, x_max, (y_max - y_min), y_min, y_max);
+	p.share(h4);
 
 	// X軸とY軸のラベルから小数点を非表示に設定
 	h1->GetXaxis()->SetNdivisions(50020);
 	// h1->GetYaxis()->SetNdivisions(505);
 	TCanvas *c1 = new TCanvas("c1", "Information about clusters", 1200, 800);
+	p.share(c1);
 	c1->Divide(2,2);
 	for(Long64_t i = 0; i < res.size(); i++){
 		h1->Fill(res[i].second);
@@ -258,11 +268,10 @@ void analysis::Find_AutoCluster(MyClass* myobj){
 	Long64_t pixel_max = cluster[0].Get_eventnum();
 	weight = myobj->Get_ADC(pixel_max);
 	TH1D *hist = new TH1D("hist", "1D Histogram;X;Entries", 100, 700, 1800);
+	p.share(hist);
 	Fill_1Dhist(hist);
 	//閾値の設定
 	threshold = hist->GetMean() + num_sigma * hist->GetStdDev(); 
-	delete hist;
-	hist = nullptr;
 	for(int i = x_min; i < x_max; i++){
 		for(int j = y_min; j < y_max; j++){
 			if(weight[i][j]){
@@ -270,13 +279,16 @@ void analysis::Find_AutoCluster(MyClass* myobj){
 			}
 		}
 	}
+	h1->GetXaxis()->SetRangeUser(h1->GetMean() - 6 * h1->GetStdDev(), h1->GetMean() + 6 * h1->GetStdDev());
 	h1->SetFillColor(kAzure-9);
 	h2->SetFillColor(kGreen-9);
 	h3->SetFillColor(kPink-9);
 	
 	TText *text3 = new TText(50, (h3->GetMaximum()), "Separated every 10 events");
+	p.share(text3);
 	// pixel_maxの情報を追加
     TText *text4 = new TText(0, -15, Form("max_event:%lld", pixel_max));
+	p.share(text4);
 	c1->cd(1); h1->Draw("");
 	c1->cd(2); h2->Draw("");
 	c1->cd(3); h3->Sumw2(0);  h3->Draw(""); text3->Draw();
@@ -287,7 +299,9 @@ void analysis::Find_AutoCluster(MyClass* myobj){
 
 void analysis::Position_Resolution(){
 	int size = cluster.size();
-	TH2D *pixels_pos = new TH2D("h2", "Position_Resolution", 30, 0, 30, 30, 0, 30);
+	TH2D *pixels_pos = new TH2D("pixels_pos", "Position_Resolution", 30, 0, 30, 30, 0, 30);
+	pixels_pos->Reset();
+	p.share(pixels_pos);
 	for(int i = 0; i < size; i++){
 		std::pair<double, double> grav;
 		grav.first = cluster[i].Get_xcenter();
@@ -303,11 +317,14 @@ void analysis::Position_Resolution(){
 		pixels_pos->Fill(pos.first, pos.second);
 	}
 	TCanvas *c1 = new TCanvas("hist2D", "Position_Resolution", 600, 800);
+	p.share(c1);
 	c1->Divide(1,2);
 	c1->cd(1);
 	pixels_pos->Draw("COLZ");
 	c1->cd(2);
 	TH1D *projX = new TH1D("projx", "projectionX", 30, 0, 30);
+	projX->Reset(); 
+	p.share(projX);
 	projX = pixels_pos->ProjectionX();
 	projX->Sumw2(0);
 	projX->Draw();
@@ -323,6 +340,9 @@ void analysis::read_param(param params){
 	path = params.in.Enter_path;
 	num_sigma = params.in.num_sigma;
 	FilterSIZE = params.in.filter_clusterSize;
+}
+
+void analysis::write_param(param &params){
 }
 
 AnalyzeType analysis::runMyClass(param params) {
@@ -362,4 +382,13 @@ void analysis::closefile(){
 }
 
 analysis::analysis(){
+}
+
+analysis::~analysis(){
+	clear_pointer();
+	closefile();
+}
+
+void analysis::clear_pointer(){
+	p.erase_pointer();
 }

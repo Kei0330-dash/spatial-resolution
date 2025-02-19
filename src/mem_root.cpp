@@ -18,6 +18,15 @@ void mem_root::share(TCanvas* c1){
 	tcanvas.push_back(c1);
 }
 
+void mem_root::share(TText *t){
+	ttext.push_back(t);
+}
+
+void mem_root::share(std::vector<TLine*>lines){
+	tlines.push_back(lines);
+}
+
+
 void mem_root::erase_pointer(){
 	if(!th1d.empty()){
 		for(auto& h1 : th1d){
@@ -36,6 +45,21 @@ void mem_root::erase_pointer(){
             delete c1;
         }
         tcanvas.clear();
+	}
+	if(!tcanvas.empty()){
+		for(auto& t : ttext){
+            delete t;
+        }
+        ttext.clear();
+	}
+	if(!tlines.empty()){
+		for(int i = 0; i < tlines.size(); i++){
+			for(auto& l : tlines[i]){
+				delete l;
+        	}
+			tlines[i].clear();
+		}
+        tlines.clear();
 	}
 }
 

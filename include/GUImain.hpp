@@ -31,6 +31,7 @@ public:
 	int Get_Filter_ClusterSize();
 	TString Get_EnteredPath();
 	param SettingParam();
+	void init_ANALYZE();
 
 
 private:
