@@ -7,20 +7,24 @@
 #include <TLine.h>
 #include <TText.h>
 #include <vector>
+#include <mutex>
 /// @brief ROOTで動的に確保したポインタをここに共有して消去するクラス
 class mem_root{
 	private:
 	std::vector<TH1D*> th1d;
 	std::vector<TH2D*> th2d;
 	std::vector<TCanvas*> tcanvas;
-	std::vector<TText *> ttext;
+	std::vector<TText*> ttext;
+	std::vector<TLine*> tline;
 	std::vector<std::vector<TLine*>> tlines;
+	std::mutex mtx;
 
 	public:
 	void share(TH1D* h1);
 	void share(TH2D* h1);
 	void share(TCanvas* c1);
 	void share(TText *t);
+	void share(TLine* l1);
 	void share(std::vector<TLine*>lines);
 	void erase_pointer();
 };

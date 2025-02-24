@@ -223,15 +223,20 @@ void analysis::AnalyzeAndVisualizeClusters(){
 	p.share(h1);
 	Fill_1Dhist(h1);
 	h1->GetXaxis()->SetRangeUser(h1->GetMean() - 6 * h1->GetStdDev(), h1->GetMean() + 6 * h1->GetStdDev());
-
-	TCanvas *hist1D = new TCanvas("hist1D", "1D Histogram", 600, 400);
-	p.share(hist1D);
-	h1->Draw();
-	hist1D->Update();
-
 	//閾値の設定
 	threshold = create_threshold(h1->GetMean(), h1->GetStdDev());
 	std::cout << "Threshold: " << threshold << std::endl;
+	TCanvas *hist1D = new TCanvas("hist1D", "1D Histogram", 600, 400);
+	p.share(hist1D);
+	TLine* thre_line = new TLine(threshold, 0, threshold, 1.05 * h1->GetMaximum());
+	// p.share(thre_line);
+	thre_line->SetLineColor(kRed - 9);
+	thre_line->SetLineWidth(2);
+	h1->Draw();
+	thre_line->Draw("same");
+	hist1D->Update();
+
+	
 
 	//2次元マップの作成
 	origin_map = create_map();
@@ -458,8 +463,8 @@ analysis::analysis(){
 }
 
 analysis::~analysis(){
-	clear_pointer();
-	closefile();
+	// clear_pointer();
+	// closefile();
 }
 
 AnalyzeType analysis::runMyClass(param params) {
