@@ -4,7 +4,7 @@ CXXFLAGS = -std=c++11 $(shell root-config --cflags)
 LDFLAGS = $(shell root-config --glibs)
 
 # ソースファイルとオブジェクトファイル
-SOURCES = src/GUImain_class.cpp build/GUI_Dict.cpp src/analysis_class.cpp src/block.cpp src/MyClass.cpp src/mem_root.cpp
+SOURCES = src/GUImain.cpp build/GUI_Dict.cpp src/analysis.cpp src/block.cpp src/MyClass.cpp src/mem_root.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
 # 実行ファイル
@@ -24,8 +24,8 @@ $(BUILD_DIR)/$(EXECUTABLE): $(OBJECTS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 # rootclingで辞書ファイルを生成
-$(BUILD_DIR)/GUI_Dict.cpp: include/GUImain.hpp include/analysis_class.hpp include/LinkDef.hpp include/block.hpp include/alias.hpp include/mem_root.hpp
-	rootcling -f $(BUILD_DIR)/GUI_Dict.cpp -c include/GUImain.hpp include/analysis_class.hpp include/LinkDef.hpp
+$(BUILD_DIR)/GUI_Dict.cpp: include/GUImain.hpp include/analysis.hpp include/LinkDef.hpp include/block.hpp include/alias.hpp include/mem_root.hpp
+	rootcling -f $(BUILD_DIR)/GUI_Dict.cpp -c include/GUImain.hpp include/analysis.hpp include/LinkDef.hpp
 
 # クリーンアップ
 clean:

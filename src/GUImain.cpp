@@ -1,5 +1,6 @@
 #include "../include/GUImain.hpp"
 #include "../include/analysis.hpp"
+#include "../include/param.hpp"
 #include <TApplication.h>
 #include <TGClient.h>
 #include <TGFileDialog.h>
@@ -9,7 +10,6 @@ const char *fileTypes[] = {"All files", "*", nullptr};  // 配列を定義
 
 MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) 
     : TGMainFrame(p, w, h) {
-
     // 垂直フレームを作成
     TGVerticalFrame *mainFrame = new TGVerticalFrame(this, w, h);
 
@@ -92,32 +92,28 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
 }
 
 MyMainFrame::~MyMainFrame() {
+	delete ANA;
     Cleanup();
 }
 
 void MyMainFrame::HandleButton() {
-	TString path = Get_EnteredPath();
-	if (path.Length() == 0) {
-		std::cerr << "Error: No file path specified" << std::endl;
-		return;
-	}
-    state = runMyClass(Get_Entry_num(), Get_Option_Red(), Get_Option_Subtract(), Get_Option_Fitting(), false, path);
+	param params = SettingParam();
+	init_ANALYZE();
+    state = ANA->runMyClass(params);
 }
 
 void MyMainFrame::SearchCluster() {
-	TString path = Get_EnteredPath();
-	if (path.Length() == 0) {
-		std::cerr << "Error: No file path specified" << std::endl;
-		return;
-	}
-    state = runMyClass(0, false, Get_Option_Subtract(), false, true, path);
+	param params = SettingParam();
+	init_ANALYZE();
+	params.in.AutoCluster = true;
+    state = ANA->runMyClass(params);
 }
 
 void MyMainFrame::OpenFile() {
     TString enteredPath = Get_EnteredPath();
 	if(state == ANALYZE_ONE_EVENT || state == ANALYZE_ALL_CLUSTERS){
 		state = NO_ACTION;
-        closefile();
+        ANA->closefile();
 	}
 	static TString dir(".");
 	TGFileInfo fileInfo;
@@ -154,6 +150,37 @@ bool MyMainFrame::Get_Option_Subtract() {
 bool MyMainFrame::Get_Option_Fitting() {
     return Option_Fitting->IsOn();
 }
+
+double MyMainFrame::Get_SettingThreshold(){
+	return thresholdEntry->GetNumber();
+}
+
+int MyMainFrame::Get_Filter_ClusterSize(){
+	return ClusterFilterEntry->GetIntNumber();
+}
+
+param MyMainFrame::SettingParam(){
+	TString path = Get_EnteredPath();
+	if (path.Length() == 0) {
+		// std::cerr << "Error: No file path specified" << std::endl;
+		// return;
+		throw std::runtime_error("Error: No file path specified");
+	}
+
+	param params(Get_SettingThreshold(), Get_Filter_ClusterSize(), Get_Option_Red(), Get_Option_Subtract(), Get_Option_Fitting(), false, Get_Entry_num(), Get_EnteredPath());
+	return params;
+}
+
+void MyMainFrame::init_ANALYZE(){
+	if(ANA == nullptr){
+		ANA = new analysis();
+	}
+	else if(state == ANALYZE_ONE_EVENT || state == ANALYZE_ALL_CLUSTERS){
+		ANA->clear_pointer();
+	}
+	ANA->init_DataStructure();
+}
+
 
 int main(int argc, char **argv) {
     TApplication app("app", &argc, argv);

@@ -36,7 +36,7 @@
 
 // Header files passed as explicit arguments
 #include "include/GUImain.hpp"
-#include "include/analysis_class.hpp"
+#include "include/analysis.hpp"
 
 // Header files passed via #pragma extra_include
 
@@ -204,7 +204,7 @@ namespace {
   void TriggerDictionaryInitialization_GUI_Dict_Impl() {
     static const char* headers[] = {
 "include/GUImain.hpp",
-"include/analysis_class.hpp",
+"include/analysis.hpp",
 nullptr
     };
     static const char* includePaths[] = {
@@ -228,7 +228,7 @@ class __attribute__((annotate("$clingAutoload$include/GUImain.hpp")))  MyMainFra
 #define _BACKWARD_BACKWARD_WARNING_H
 // Inline headers
 #include "include/GUImain.hpp"
-#include "include/analysis_class.hpp"
+#include "include/analysis.hpp"
 
 #undef  _BACKWARD_BACKWARD_WARNING_H
 )DICTPAYLOAD";

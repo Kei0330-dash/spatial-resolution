@@ -9,6 +9,7 @@
 #include <TF2.h>
 #include <TBox.h>
 #include <TLine.h>
+#include <TText.h>
 #include <iostream>
 #include <stack>
 #include <set>
@@ -17,20 +18,13 @@
 #include <string>
 #include <limits>
 #include <algorithm>
-//2次元ヒストグラムの最小値から最大値
-const int x_min = 0, x_max = 128,
-            y_min = 0, y_max = 128;
-//
-all_delete p;
-TFile *file = nullptr;
 
-block dfs(int x, int y, THRESHOLD_MAP &map, ADC_DATA &weight){
+block analysis::dfs(int x, int y, THRESHOLD_MAP &map){
 	std::stack<std::pair<int, int>> st;
 	st.push({x, y});
 	block cluster;
 	cluster.insert_pixels(x, y, weight[x][y]);
 	while(!st.empty()){
-		/*2回以上dfsを実行したら、cluster.flagをtrueにして最後の結果を表示しない*/
 		auto[cx, cy] = st.top();
 		st.pop();
 		map[cx][cy] = '.';
@@ -47,9 +41,9 @@ block dfs(int x, int y, THRESHOLD_MAP &map, ADC_DATA &weight){
 		}
 	}
 	return cluster;
-}
+};
 
-void Fill_1Dhist(TH1D* &h1, ADC_DATA &weight){
+void analysis::Fill_1Dhist(TH1D* &h1){
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
 			h1->Fill(weight[i][j]);
@@ -57,7 +51,7 @@ void Fill_1Dhist(TH1D* &h1, ADC_DATA &weight){
 	}
 }
 
-void Fill_2Dhist(TH2D* &h2, ADC_DATA &weight){
+void analysis::Fill_2Dhist(TH2D* &h2){
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
 			h2->Fill(i, j, weight[i][j]);
@@ -65,8 +59,8 @@ void Fill_2Dhist(TH2D* &h2, ADC_DATA &weight){
 	}
 }
 
-ADC_DATA pedestal_subtract(ADC_DATA weight, double threshold, bool opt_sub){
-	if(!opt_sub) return weight;
+ADC_DATA analysis::pedestal_subtract(){
+	if(!opt_subtract) return weight;
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
 			if((int)threshold < weight[i][j]){
@@ -79,35 +73,36 @@ ADC_DATA pedestal_subtract(ADC_DATA weight, double threshold, bool opt_sub){
 	}
 }
 
-THRESHOLD_MAP create_map(ADC_DATA &weight, double threshold, bool opt_sub){
+THRESHOLD_MAP analysis::create_map(){
 	THRESHOLD_MAP map(x_max - x_min, std::vector<char>(y_max - y_min));
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
 			if((int)threshold < weight[i][j]){
 				map[i][j] = 'W';
-				if(opt_sub) 
-				weight[i][j] -= (int)threshold;
+				if(opt_subtract) 
+					weight[i][j] -= (int)threshold;
 			}
 			else{ 
 				map[i][j] = '.';
-				if(opt_sub) 
-				weight[i][j] = 0;
+				if(opt_subtract) 
+					weight[i][j] = 0;
 			}
 		}
 	}
 	return map;
 }
 
-int call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, bool opt_sub, int event_num){
+int analysis::call_dfs(){
 	int count = 0;
+	THRESHOLD_MAP map = origin_map;
 	for(int i = x_min; i < x_max; i++){
 		for(int j = y_min; j < y_max; j++){
 			if(map[i][j] == 'W'){
-				block tmp = dfs(i, j, map, weight);
+				block tmp = dfs(i, j, map);
 				tmp.Set_eventnum(event_num);
 				tmp.center_of_gravity(weight);
-				if(tmp.Get_pixelsize() > 2) cluster.push_back(tmp);
-				else{if(opt_sub)weight[i][j] = 0, count--;}
+				if(tmp.Get_pixelsize() > FilterSIZE) cluster.push_back(tmp);
+				else{if(opt_subtract)weight[i][j] = 0, count--;}
 				count++;
 			}
 		}
@@ -115,10 +110,10 @@ int call_dfs(THRESHOLD_MAP &map, CLUSTER_DATA &cluster, ADC_DATA &weight, bool o
 	return count;
 }
 
-void highlight(TBox* &box, THRESHOLD_MAP map){
+void analysis::highlight(TBox* &box){
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
-			if(map[i][j] == 'W'){
+			if(origin_map[i][j] == 'W'){
 				box = new TBox(i, j, i+1, j+1);
 				box->SetLineColor(kRed);
 				box->SetLineWidth(2);
@@ -129,16 +124,16 @@ void highlight(TBox* &box, THRESHOLD_MAP map){
 	}
 }
 
-void highlight(std::vector<TLine*> &lines, THRESHOLD_MAP map){
+void analysis::highlight(std::vector<TLine*> &lines){
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
 			//閾値を超えているかの条件
-			if(map[i][j] == 'W'){
+			if(origin_map[i][j] == 'W'){
 				//線を引く基準を決める条件達
 				int dx[4] = {-1, 0, 0, 1}; int dy[4] = {0, -1, 1, 0};
 				for(int k = 0; k < 4; k++){
 					int nx = i + dx[k]; int ny = j + dy[k];
-					if(x_min <= nx && nx < x_max && y_min <= ny && ny < y_max && map[nx][ny] != 'W'){
+					if(x_min <= nx && nx < x_max && y_min <= ny && ny < y_max && origin_map[nx][ny] != 'W'){
 						TLine *line;
 						switch (k){
 							case 0:{
@@ -173,32 +168,74 @@ void highlight(std::vector<TLine*> &lines, THRESHOLD_MAP map){
 	}
 }
 
-void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bool opt_fit){
-	//使用する変数。
-	THRESHOLD_MAP original_map(x_max - x_min, std::vector<char>(y_max - y_min));
-	THRESHOLD_MAP map(x_max - x_min, std::vector<char>(y_max - y_min));
-	double threshold;
-	CLUSTER_DATA cluster;
+void analysis::highlightv2(std::vector<TLine*> &lines){
+	int size = cluster.size();
+	for(int ci = 0; ci < size; ci++){
+		std::set<std::tuple<int, int, int>> place;
+		place = cluster[ci].Get_set();
+		for(auto &a: place){
+			int i = std::get<0>(a);
+			int j = std::get<1>(a);
+			//閾値を超えているかの条件
+			if(origin_map[i][j] == 'W'){
+				//線を引く基準を決める条件達
+				int dx[4] = {-1, 0, 0, 1}; int dy[4] = {0, -1, 1, 0};
+				for(int k = 0; k < 4; k++){
+					int nx = i + dx[k]; int ny = j + dy[k];
+					if(x_min <= nx && nx < x_max && y_min <= ny && ny < y_max && origin_map[nx][ny] != 'W'){
+						TLine *line;
+						switch (k){
+							case 0:{
+								line = new TLine(i, j, i, j + 1);
+								break;
+							}
+							case 1:{
+								line = new TLine(i, j, i + 1, j);
+								break;
+							}
+							case 2:{
+								line = new TLine(i, j + 1, i + 1, j + 1);
+								break;
+							}
+							
+							default:{
+								line = new TLine(i + 1, j, i + 1, j + 1);
+								break;
+							}
+						}
+						lines.push_back(line); // TLineオブジェクトをリストに追加
+					}
+				}
+			}
+		}
+	}
+	// すべてのラインを描画
+	for(TLine* line : lines) {
+		line->SetLineColor(kRed);
+		line->SetLineWidth(2);
+		line->Draw("same");
+	}
+}
 
+void analysis::AnalyzeAndVisualizeClusters(){
 	//1次元ヒストグラムの作成
 	TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 1600, 0, 8000);
-	Fill_1Dhist(h1, weight);
-	TCanvas *hist1D = new TCanvas("hist1D", "1D Histogram", 600, 400);
-	h1->Draw();
+	p.share(h1);
+	Fill_1Dhist(h1);
 	h1->GetXaxis()->SetRangeUser(h1->GetMean() - 6 * h1->GetStdDev(), h1->GetMean() + 6 * h1->GetStdDev());
 
-	//閾値の設定
-	threshold = h1->GetMean() + 5 * h1->GetStdDev();
-	std::cout << "Threshold: " << threshold << std::endl;
-	TLine* thre_line = new TLine(threshold, 0, threshold, 1.05 * h1->GetMaximum());
-	thre_line->SetLineColor(kRed - 9);
-	thre_line->SetLineWidth(2);
-	thre_line->Draw("same");
+	TCanvas *hist1D = new TCanvas("hist1D", "1D Histogram", 600, 400);
+	p.share(hist1D);
+	h1->Draw();
 	hist1D->Update();
+
+	//閾値の設定
+	threshold = create_threshold(h1->GetMean(), h1->GetStdDev());
+	std::cout << "Threshold: " << threshold << std::endl;
+
 	//2次元マップの作成
-	original_map = create_map(weight, threshold, opt_sub);
-	map = original_map;
-	std::cout << "Cluster count: " << call_dfs(map, cluster, weight, opt_sub, 0) << std::endl;//0は一時的な修正
+	origin_map = create_map();
+	std::cout << "Cluster count: " << call_dfs() << std::endl;//0は一時的な修正
 
 	//クラスターがある場合、重心を求める
 	if(!cluster.empty()){
@@ -212,31 +249,168 @@ void AnalyzeAndVisualizeClusters(ADC_DATA weight, bool opt_Red, bool opt_sub, bo
 
 	//2次元ヒストグラムの作成
 	TH2D *h2 = new TH2D("h2", "Pixel Distribution;X;Y", (x_max - x_min), x_min, x_max, (y_max - y_min), y_min, y_max);
+	p.share(h2);
 	h2->Sumw2();
 	h2->SetStats(0);
-	Fill_2Dhist(h2, weight);
+	Fill_2Dhist(h2);
 
 	//閾値を超えた部分を強調表示
 	TCanvas *hist2D = new TCanvas("hist2D", "2D Histogram", 600, 400);
-	// hist2D->Divide(1, 2);
-	// hist2D->cd(1);
+	p.share(hist2D);
 	h2->Draw("COLZ");
 	std::vector<TLine*> lines;
+	p.share(lines);
 	if(opt_Red) {
-		highlight(lines, original_map);
+		highlightv2(lines);
 	}
 	hist2D->Update();
-	// p.pointer_share(h1, h2, box, hist2D);
 
 }
 
-void Position_Resolution(CLUSTER_DATA data){
-	int size = data.size();
-	TH2D *pixels_pos = new TH2D("h2", "Position_Resolution", 30, 0, 30, 30, 0, 30);
+void analysis::AnalyzeAndVisualizeClusters(MyClass* myobj){
+	//1次元ヒストグラムの作成
+	TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 1600, 0, 8000);
+	p.share(h1);
+	int nentries = myobj->Get_EntryMax();
+	for(int i = 0; i < nentries; i++){
+		weight = myobj->Get_ADC(i);
+		Fill_1Dhist(h1);
+	}
+	h1->GetXaxis()->SetRangeUser(h1->GetMean() - 6 * h1->GetStdDev(), h1->GetMean() + 6 * h1->GetStdDev());
+
+	TCanvas *hist1D = new TCanvas("hist1D", "1D Histogram", 600, 400);
+	p.share(hist1D);
+	h1->Draw();
+	hist1D->Update();
+
+	//閾値の設定
+	threshold = create_threshold(h1->GetMean(), h1->GetStdDev());
+	std::cout << "Threshold: " << threshold << std::endl;
+
+	//2次元マップの作成
+	origin_map = create_map();
+	std::cout << "Cluster count: " << call_dfs() << std::endl;//0は一時的な修正
+
+	//クラスターがある場合、重心を求める
+	if(!cluster.empty()){
+		for(int i = 0; i < cluster.size(); i++){
+			std::pair<double, double> ans;
+			ans.first = cluster[i].Get_xcenter();
+			ans.second = cluster[i].Get_ycenter();
+			std::cout << "Center of gravity: " << ans.first << ", " << ans.second << std::endl;
+		}
+	}
+
+	//2次元ヒストグラムの作成
+	TH2D *h2 = new TH2D("h2", "Pixel Distribution;X;Y", (x_max - x_min), x_min, x_max, (y_max - y_min), y_min, y_max);
+	p.share(h2);
+	h2->Sumw2();
+	h2->SetStats(0);
+	Fill_2Dhist(h2);
+
+	//閾値を超えた部分を強調表示
+	TCanvas *hist2D = new TCanvas("hist2D", "2D Histogram", 600, 400);
+	p.share(hist2D);
+	h2->Draw("COLZ");
+	std::vector<TLine*> lines;
+	p.share(lines);
+	if(opt_Red) {
+		highlight(lines);
+	}
+	hist2D->Update();
+
+}
+
+void analysis::Find_AutoCluster(MyClass* myobj){
+	//使用する変数。
+	Long64_t nentries;
+	//クラスターがあるエントリーナンバーを全て返す
+	nentries = myobj->Get_EntryMax();
+	std::vector<std::pair<int,int>> res(nentries);
+
+	for(Long64_t entry_num = 0; entry_num < nentries; entry_num++){
+		weight = myobj->Get_ADC(entry_num);
+
+		TH1D *hist = new TH1D("hist", "1D Histogram;X;Entries", 100, 700, 1800);
+		Fill_1Dhist(hist);
+		//閾値の設定
+		threshold = hist->GetMean() + num_sigma * hist->GetStdDev(); 
+		delete hist;
+		hist = nullptr;
+		origin_map = create_map();
+
+		event_num = entry_num;
+		int ans = call_dfs();
+
+		res[entry_num] = std::make_pair(entry_num, ans); 
+		
+	}
+	TH1D *h1 = new TH1D("h1", "Number of Clusters per Event;Number of Clusters;Number of Events", 1000, 0, 1000);
+	p.share(h1);
+	TH1D *h2 = new TH1D("h2", "Cluster Size Distribution;Cluster Size;Number of Events", 100, 0, 100);
+	p.share(h2);
+	TH1D *h3 = new TH1D("h3", "Distribution of Clusters in number of Events;Entry num;Number of Events", nentries / 10, 0, nentries);
+	p.share(h3);
+	TH2D *h4 = new TH2D("h4", "The Event with the Largest Pixel Size;X;y", (x_max - x_min) , x_min, x_max, (y_max - y_min), y_min, y_max);
+	p.share(h4);
+
+	// X軸とY軸のラベルから小数点を非表示に設定
+	h1->GetXaxis()->SetNdivisions(50020);
+	// h1->GetYaxis()->SetNdivisions(505);
+	TCanvas *c1 = new TCanvas("c1", "Information about clusters", 1200, 800);
+	p.share(c1);
+	c1->Divide(2,2);
+	for(Long64_t i = 0; i < res.size(); i++){
+		h1->Fill(res[i].second);
+		if(res[i].second >= 1){
+			h3->Fill(res[i].first, res[i].second);
+		}
+	}
+	for(int i = 0; i < cluster.size(); i++){
+		h2->Fill(cluster[i].Get_pixelsize());
+	}
+	sort(cluster.rbegin(), cluster.rend());
+	Long64_t pixel_max = cluster[0].Get_eventnum();
+	weight = myobj->Get_ADC(pixel_max);
+	TH1D *hist = new TH1D("hist", "1D Histogram;X;Entries", 100, 700, 1800);
+	p.share(hist);
+	Fill_1Dhist(hist);
+	//閾値の設定
+	threshold = create_threshold(hist->GetMean(), hist->GetStdDev()); 
+	for(int i = x_min; i < x_max; i++){
+		for(int j = y_min; j < y_max; j++){
+			if(weight[i][j]){
+				h4->Fill(i, j, weight[i][j]);
+			}
+		}
+	}
+	h1->GetXaxis()->SetRangeUser(h1->GetMean() - 6 * h1->GetStdDev(), h1->GetMean() + 6 * h1->GetStdDev());
+	h1->SetFillColor(kAzure-9);
+	h2->SetFillColor(kGreen-9);
+	h3->SetFillColor(kPink-9);
+	
+	TText *text3 = new TText(50, (h3->GetMaximum()), "Separated every 10 events");
+	p.share(text3);
+	// pixel_maxの情報を追加
+    TText *text4 = new TText(0, -15, Form("max_event:%lld", pixel_max));
+	p.share(text4);
+	c1->cd(1); h1->Draw("");
+	c1->cd(2); h2->Draw("");
+	c1->cd(3); h3->Sumw2(0);  h3->Draw(""); text3->Draw();
+	c1->cd(4); h4->Draw(""); text4->Draw();
+	c1->Update();
+	Position_Resolution();
+}
+
+void analysis::Position_Resolution(){
+	int size = cluster.size();
+	TH2D *pixels_pos = new TH2D("pixels_pos", "Position_Resolution", 30, 0, 30, 30, 0, 30);
+	pixels_pos->Reset();
+	p.share(pixels_pos);
 	for(int i = 0; i < size; i++){
 		std::pair<double, double> grav;
-		grav.first = data[i].Get_xcenter();
-		grav.second = data[i].Get_ycenter();
+		grav.first = cluster[i].Get_xcenter();
+		grav.second = cluster[i].Get_ycenter();
 		//SOFIST3の30umの位置情報に変換(0を中央にする)
 		std::pair<int, int> pos;
 		pos.first = (grav.first + 0.5) * 30;
@@ -248,21 +422,49 @@ void Position_Resolution(CLUSTER_DATA data){
 		pixels_pos->Fill(pos.first, pos.second);
 	}
 	TCanvas *c1 = new TCanvas("hist2D", "Position_Resolution", 600, 800);
+	p.share(c1);
 	c1->Divide(1,2);
 	c1->cd(1);
 	pixels_pos->Draw("COLZ");
 	c1->cd(2);
 	TH1D *projX = new TH1D("projx", "projectionX", 30, 0, 30);
+	projX->Reset(); 
+	p.share(projX);
 	projX = pixels_pos->ProjectionX();
 	projX->Sumw2(0);
 	projX->Draw();
 	c1->Update();
 }
 
+void analysis::read_param(param params){
+	opt_Red = params.in.opt_Red;
+	opt_subtract = params.in.opt_Subtract;
+	opt_Fitting = params.in.opt_Fitting;
+	opt_AutoCluster = params.in.AutoCluster;
+	event_num = params.in.num_entry;
+	path = params.in.Enter_path;
+	num_sigma = params.in.num_sigma;
+	FilterSIZE = params.in.filter_clusterSize;
+}
 
-AnalyzeType runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit, bool opt_AutoCluster, TString path) {
+void analysis::write_param(param &params){
+}
+
+double analysis::create_threshold(double mean, double stddev){
+	return mean + num_sigma * stddev;
+}
+
+analysis::analysis(){
+}
+
+analysis::~analysis(){
+	clear_pointer();
+	closefile();
+}
+
+AnalyzeType analysis::runMyClass(param params) {
+	read_param(params);
 	MyClass *myobj = nullptr;
-	p.pointer_delete(); // 共有ポインタの解放
 	if(!file){
 		file = TFile::Open(path);
 		if (!file || file->IsZombie()) {
@@ -274,39 +476,33 @@ AnalyzeType runMyClass(Int_t event_num, bool opt_Red, bool opt_sub, bool opt_fit
 	TTree *SOFIST_Data = (TTree*)file->Get("SOFIST_Data");
 	myobj = new MyClass(SOFIST_Data);
 	if(!opt_AutoCluster){
-		ADC_DATA data = myobj->Get_ADC(event_num);
-		// myobj->Loop(event_num, opt_Red, opt_sub, opt_fit);
-		AnalyzeAndVisualizeClusters(data, opt_Red, opt_sub, opt_fit);
+		weight = myobj->Get_ADC(event_num);
+		AnalyzeAndVisualizeClusters();
 		delete myobj;
 		return ANALYZE_ONE_EVENT;
 	}
 	else{
-		myobj->Find_AutoCluster(opt_sub);
+		Find_AutoCluster(myobj);
 		delete myobj;
 		return ANALYZE_ALL_CLUSTERS;
 	}
-//    myobj->Loop(event_num, opt_Red, opt_sub, opt_fit);
-	// ADC_DATA data = myobj->Get_ADC(event_num);
-	// AnalyzeAndVisualizeClusters(data, opt_Red, opt_sub, opt_fit);
+
 }
 
-void closefile(){
+void analysis::closefile(){
 	if(file->IsOpen()){	
-	file->Close();
-	delete file;
-	file = nullptr;
+		file->Close();
+		delete file;
+		file = nullptr;
 	}
 }
 
+void analysis::clear_pointer(){
+	p.erase_pointer();
+}
 
-
-// フィット結果を取得
-// double mean = gaus->GetParameter(1);
-// double sigma = gaus->GetParameter(2);
-// double chi2 = gaus->GetChisquare();
-// int ndf = gaus->GetNDF();
-// double pvalue = gaus->GetProb();
-
-// ヒストグラムの色の範囲を固定
-//h2->SetMinimum(1000); // 最小値を設定
-//h2->SetMaximum(1500); // 最大値を設定
+void analysis::init_DataStructure(){
+	cluster.clear();
+	weight.clear();
+	origin_map.clear();
+}

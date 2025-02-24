@@ -3,7 +3,7 @@
 
 #include "alias.hpp"
 #include "param.hpp"
-#include "analysis_class.hpp"
+#include "analysis.hpp"
 #include <iostream>  // std::coutを使用するために追加
 #include <TGButton.h>
 #include <TGNumberEntry.h>
