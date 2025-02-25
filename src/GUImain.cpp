@@ -87,7 +87,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
 
     SetWindowName("Settings screen");
     MapSubwindows();
-    Resize(GetDefaultSize());  // 具体的なサイズを指定
+    Resize(GetDefaultSize());
     MapWindow();
 }
 
@@ -100,6 +100,8 @@ void MyMainFrame::HandleButton() {
 	param params = SettingParam();
 	init_ANALYZE();
     state = ANA->runMyClass(params);
+	out = new outputFrame(gClient->GetRoot(), this, 500, 400, params);
+	out->MapWindow();
 }
 
 void MyMainFrame::SearchCluster() {

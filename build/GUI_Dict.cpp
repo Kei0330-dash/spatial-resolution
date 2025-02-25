@@ -89,6 +89,34 @@ namespace ROOT {
 } // end of namespace ROOT
 
 namespace ROOT {
+   static void delete_outputFrame(void *p);
+   static void deleteArray_outputFrame(void *p);
+   static void destruct_outputFrame(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::outputFrame*)
+   {
+      ::outputFrame *ptr = nullptr;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::outputFrame >(nullptr);
+      static ::ROOT::TGenericClassInfo 
+         instance("outputFrame", ::outputFrame::Class_Version(), "include/output.hpp", 18,
+                  typeid(::outputFrame), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::outputFrame::Dictionary, isa_proxy, 4,
+                  sizeof(::outputFrame) );
+      instance.SetDelete(&delete_outputFrame);
+      instance.SetDeleteArray(&deleteArray_outputFrame);
+      instance.SetDestructor(&destruct_outputFrame);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::outputFrame*)
+   {
+      return GenerateInitInstanceLocal(static_cast<::outputFrame*>(nullptr));
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal(static_cast<const ::outputFrame*>(nullptr)); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
+namespace ROOT {
    static void delete_MyMainFrame(void *p);
    static void deleteArray_MyMainFrame(void *p);
    static void destruct_MyMainFrame(void *p);
@@ -100,7 +128,7 @@ namespace ROOT {
       ::MyMainFrame *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::MyMainFrame >(nullptr);
       static ::ROOT::TGenericClassInfo 
-         instance("MyMainFrame", ::MyMainFrame::Class_Version(), "include/GUImain.hpp", 18,
+         instance("MyMainFrame", ::MyMainFrame::Class_Version(), "include/GUImain.hpp", 19,
                   typeid(::MyMainFrame), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &::MyMainFrame::Dictionary, isa_proxy, 16,
                   sizeof(::MyMainFrame) );
@@ -117,6 +145,41 @@ namespace ROOT {
    // Static variable to force the class initialization
    static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal(static_cast<const ::MyMainFrame*>(nullptr)); R__UseDummy(_R__UNIQUE_DICT_(Init));
 } // end of namespace ROOT
+
+//______________________________________________________________________________
+atomic_TClass_ptr outputFrame::fgIsA(nullptr);  // static to hold class pointer
+
+//______________________________________________________________________________
+const char *outputFrame::Class_Name()
+{
+   return "outputFrame";
+}
+
+//______________________________________________________________________________
+const char *outputFrame::ImplFileName()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::outputFrame*)nullptr)->GetImplFileName();
+}
+
+//______________________________________________________________________________
+int outputFrame::ImplFileLine()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::outputFrame*)nullptr)->GetImplFileLine();
+}
+
+//______________________________________________________________________________
+TClass *outputFrame::Dictionary()
+{
+   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::outputFrame*)nullptr)->GetClass();
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+TClass *outputFrame::Class()
+{
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::outputFrame*)nullptr)->GetClass(); }
+   return fgIsA;
+}
 
 //______________________________________________________________________________
 atomic_TClass_ptr MyMainFrame::fgIsA(nullptr);  // static to hold class pointer
@@ -175,6 +238,32 @@ namespace ROOT {
 } // end of namespace ROOT for class ::MyClass
 
 //______________________________________________________________________________
+void outputFrame::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class outputFrame.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(outputFrame::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(outputFrame::Class(),this);
+   }
+}
+
+namespace ROOT {
+   // Wrapper around operator delete
+   static void delete_outputFrame(void *p) {
+      delete (static_cast<::outputFrame*>(p));
+   }
+   static void deleteArray_outputFrame(void *p) {
+      delete [] (static_cast<::outputFrame*>(p));
+   }
+   static void destruct_outputFrame(void *p) {
+      typedef ::outputFrame current_t;
+      (static_cast<current_t*>(p))->~current_t();
+   }
+} // end of namespace ROOT for class ::outputFrame
+
+//______________________________________________________________________________
 void MyMainFrame::Streamer(TBuffer &R__b)
 {
    // Stream an object of class MyMainFrame.
@@ -219,6 +308,7 @@ nullptr
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 extern int __Cling_AutoLoading_Map;
 class __attribute__((annotate("$clingAutoload$include/GUImain.hpp")))  MyClass;
+class __attribute__((annotate("$clingAutoload$include/GUImain.hpp")))  outputFrame;
 class __attribute__((annotate("$clingAutoload$include/GUImain.hpp")))  MyMainFrame;
 )DICTFWDDCLS";
     static const char* payloadCode = R"DICTPAYLOAD(
@@ -235,6 +325,7 @@ class __attribute__((annotate("$clingAutoload$include/GUImain.hpp")))  MyMainFra
     static const char* classesHeaders[] = {
 "MyClass", payloadCode, "@",
 "MyMainFrame", payloadCode, "@",
+"outputFrame", payloadCode, "@",
 nullptr
 };
     static bool isInitialized = false;

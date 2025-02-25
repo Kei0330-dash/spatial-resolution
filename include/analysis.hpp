@@ -40,6 +40,7 @@ class analysis{
 	THRESHOLD_MAP origin_map;
 	CLUSTER_DATA cluster;
 	double threshold;
+	int cluster_found;
 	std::vector<std::vector<double>> thresholds;
 	/// @brief 深さ優先探索を実行してクラスターの塊を走査する。ただし、直接呼ばずint call_dfs()を経由して呼び出すこと。
 	/// @param x ピクセルのx軸
@@ -96,7 +97,7 @@ class analysis{
 	analysis();
 	/// @brief デストラクタ。ポインタを消去し、ファイルを閉じる。
 	~analysis();
-	AnalyzeType runMyClass(param params);
+	AnalyzeType runMyClass(param &params);
 	void closefile();
 	void clear_pointer();
 	void init_DataStructure();

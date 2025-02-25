@@ -2,6 +2,7 @@
 #define MyClass_cxx
 #include "../include/MyClass.hpp"
 #include "../include/analysis.hpp"
+#include "../include/param.hpp"
 #include <TApplication.h>
 #include <TH2.h>
 #include <TStyle.h>
@@ -61,31 +62,43 @@ void analysis::Fill_2Dhist(TH2D* &h2){
 
 ADC_DATA analysis::pedestal_subtract(){
 	if(!opt_subtract) return weight;
+	ADC_DATA ADC = weight;
 	for(Long64_t i = x_min; i < x_max; i++){
 		for(Long64_t j = y_min; j < y_max; j++){
-			if((int)threshold < weight[i][j]){
-				weight[i][j] -= (int)threshold;
+			if((int)threshold < ADC[i][j]){
+				ADC[i][j] -= (int)threshold;
 			}
 			else{ 
-				weight[i][j] = 0;
+				ADC[i][j] = 0;
 			}
 		}
 	}
+	return ADC;
 }
 
 THRESHOLD_MAP analysis::create_map(){
 	THRESHOLD_MAP map(x_max - x_min, std::vector<char>(y_max - y_min));
-	for(Long64_t i = x_min; i < x_max; i++){
-		for(Long64_t j = y_min; j < y_max; j++){
-			if((int)threshold < weight[i][j]){
-				map[i][j] = 'W';
-				if(opt_subtract) 
-					weight[i][j] -= (int)threshold;
+	if(opt_subtract){
+		for(Long64_t i = x_min; i < x_max; i++){
+			for(Long64_t j = y_min; j < y_max; j++){
+				if(0 < weight[i][j]){
+					map[i][j] = 'W';
+				}
+				else{ 
+					map[i][j] = '.';
+				}
 			}
-			else{ 
-				map[i][j] = '.';
-				if(opt_subtract) 
-					weight[i][j] = 0;
+		}
+	}
+	else{
+		for(Long64_t i = x_min; i < x_max; i++){
+			for(Long64_t j = y_min; j < y_max; j++){
+				if((int)threshold < weight[i][j]){
+					map[i][j] = 'W';
+				}
+				else{ 
+					map[i][j] = '.';
+				}
 			}
 		}
 	}
@@ -93,21 +106,21 @@ THRESHOLD_MAP analysis::create_map(){
 }
 
 int analysis::call_dfs(){
-	int count = 0;
 	THRESHOLD_MAP map = origin_map;
+	int before_Size = cluster.size();
 	for(int i = x_min; i < x_max; i++){
 		for(int j = y_min; j < y_max; j++){
 			if(map[i][j] == 'W'){
 				block tmp = dfs(i, j, map);
 				tmp.Set_eventnum(event_num);
 				tmp.center_of_gravity(weight);
-				if(tmp.Get_pixelsize() > FilterSIZE) cluster.push_back(tmp);
-				else{if(opt_subtract)weight[i][j] = 0, count--;}
-				count++;
+				if(tmp.Get_pixelsize() > FilterSIZE) {
+					cluster.push_back(tmp);
+				} 
 			}
 		}
 	}
-	return count;
+	return cluster.size() - before_Size;
 }
 
 void analysis::highlight(TBox* &box){
@@ -239,8 +252,10 @@ void analysis::AnalyzeAndVisualizeClusters(){
 	
 
 	//2次元マップの作成
+	weight = pedestal_subtract();
 	origin_map = create_map();
-	std::cout << "Cluster count: " << call_dfs() << std::endl;//0は一時的な修正
+	cluster_found = call_dfs();
+	std::cout << "Cluster count: " << cluster_found << std::endl;//0は一時的な修正
 
 	//クラスターがある場合、重心を求める
 	if(!cluster.empty()){
@@ -293,8 +308,10 @@ void analysis::AnalyzeAndVisualizeClusters(MyClass* myobj){
 	std::cout << "Threshold: " << threshold << std::endl;
 
 	//2次元マップの作成
+	weight = pedestal_subtract();
 	origin_map = create_map();
-	std::cout << "Cluster count: " << call_dfs() << std::endl;//0は一時的な修正
+	cluster_found = call_dfs();
+	std::cout << "Cluster count: " << cluster_found << std::endl;//0は一時的な修正
 
 	//クラスターがある場合、重心を求める
 	if(!cluster.empty()){
@@ -342,6 +359,7 @@ void analysis::Find_AutoCluster(MyClass* myobj){
 		threshold = hist->GetMean() + num_sigma * hist->GetStdDev(); 
 		delete hist;
 		hist = nullptr;
+		weight = pedestal_subtract();
 		origin_map = create_map();
 
 		event_num = entry_num;
@@ -453,6 +471,9 @@ void analysis::read_param(param params){
 }
 
 void analysis::write_param(param &params){
+	params.out.threshold = threshold;
+	params.out.cluster_found = cluster_found;
+	params.out.cluster = cluster;
 }
 
 double analysis::create_threshold(double mean, double stddev){
@@ -467,7 +488,7 @@ analysis::~analysis(){
 	// closefile();
 }
 
-AnalyzeType analysis::runMyClass(param params) {
+AnalyzeType analysis::runMyClass(param &params) {
 	read_param(params);
 	MyClass *myobj = nullptr;
 	if(!file){
@@ -483,6 +504,7 @@ AnalyzeType analysis::runMyClass(param params) {
 	if(!opt_AutoCluster){
 		weight = myobj->Get_ADC(event_num);
 		AnalyzeAndVisualizeClusters();
+		write_param(params);
 		delete myobj;
 		return ANALYZE_ONE_EVENT;
 	}

@@ -1,5 +1,6 @@
 #ifndef PARAM_HPP
 #define PARAM_HPP
+#include "alias.hpp"
 #include <TString.h>
 #include <utility>
 
@@ -21,18 +22,16 @@ class inparam{
 class outparam{
 	public:
 	double threshold;
-	int cluster_size;
-	int ADC_sum;
-	std::pair<double, double> Center_of_Gravity;
+	int cluster_found;
+	CLUSTER_DATA cluster;
 };
 
 class param{
 	public:
 	inparam in;
-	int cluster_count;
 	outparam out;
 	param(double sigma, int clusterSize, bool red, bool subtract, bool fitting, bool autoCluster, int entry, TString path)
-	:in(sigma, clusterSize, red, subtract, fitting, autoCluster, entry, path), cluster_count(0){
+	:in(sigma, clusterSize, red, subtract, fitting, autoCluster, entry, path) {
 	}
 };
 #endif

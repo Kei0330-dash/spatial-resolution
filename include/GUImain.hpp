@@ -4,6 +4,7 @@
 #include "alias.hpp"
 #include "param.hpp"
 #include "analysis.hpp"
+#include "output.hpp"
 #include <iostream>  // std::coutを使用するために追加
 #include <TGButton.h>
 #include <TGNumberEntry.h>
@@ -47,6 +48,7 @@ private:
 	TGNumberEntry *ClusterFilterEntry;
 	AnalyzeType state = NO_ACTION;
 	analysis *ANA = nullptr;
+	outputFrame* out = nullptr;
     ClassDef(MyMainFrame, 0);
 };
 
