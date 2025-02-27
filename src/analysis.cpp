@@ -11,6 +11,8 @@
 #include <TBox.h>
 #include <TLine.h>
 #include <TText.h>
+#include <TMath.h>
+#include <TRegexp.h>
 #include <iostream>
 #include <stack>
 #include <set>
@@ -230,6 +232,40 @@ void analysis::highlightv2(std::vector<TLine*> &lines){
 	}
 }
 
+void analysis::AdjustBinsToIntegers(TH1D* histgram, Int_t step) {
+    for (Int_t i = 1; i <= histgram->GetNbinsX(); ++i) {
+        if ((i - 1) % step == 0) {
+            histgram->GetXaxis()->SetBinLabel(i, Form("%d", i - 1));
+        } else {
+            histgram->GetXaxis()->SetBinLabel(i, "");
+        }
+    }
+    histgram->SetLabelSize(0.05, "x");
+}
+
+int analysis::make_step(int min, int max){
+	int res = ((max - min) /10) + 1;
+	return res;
+}
+
+void analysis::SaveCanvasWithHVPart(TCanvas* c1, const TString& path, const TString& customInfo) {
+    // 正規表現で"HV"と数字部分を抽出
+    TRegexp reg("HV[0-9]+");
+    Ssiz_t pos = path.Index(reg);
+    
+    // 抽出した部分をファイル名に使用
+    if (pos != kNPOS) {
+        TString hvPart = path(reg);
+        TString newFileName = Form("../results/%s_%s.pdf", hvPart.Data(), customInfo.Data());
+        
+        // キャンバスを保存
+        c1->SaveAs(newFileName);
+        std::cout << "Saved as: " << newFileName << std::endl;
+    } else {
+        std::cout << "HV部分が見つかりませんでした。" << std::endl;
+    }
+}
+
 void analysis::AnalyzeAndVisualizeClusters(){
 	//1次元ヒストグラムの作成
 	TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 1600, 0, 8000);
@@ -344,6 +380,7 @@ void analysis::AnalyzeAndVisualizeClusters(MyClass* myobj){
 }
 
 void analysis::Find_AutoCluster(MyClass* myobj){
+	gStyle->SetOptStat(0);
 	//使用する変数。
 	Long64_t nentries;
 	//クラスターがあるエントリーナンバーを全て返す
@@ -370,7 +407,7 @@ void analysis::Find_AutoCluster(MyClass* myobj){
 	}
 	TH1D *h1 = new TH1D("h1", "Number of Clusters per Event;Number of Clusters;Number of Events", 1000, 0, 1000);
 	p.share(h1);
-	TH1D *h2 = new TH1D("h2", "Cluster Size Distribution;Cluster Size;Number of Events", 100, 0, 100);
+	TH1D *h2 = new TH1D("h2", "Cluster Size Distribution;Cluster Size;Number of Events", 1000, 0, 1000);
 	p.share(h2);
 	TH1D *h3 = new TH1D("h3", "Distribution of Clusters in number of Events;Entry num;Number of Events", nentries / 10, 0, nentries);
 	p.share(h3);
@@ -378,9 +415,8 @@ void analysis::Find_AutoCluster(MyClass* myobj){
 	p.share(h4);
 
 	// X軸とY軸のラベルから小数点を非表示に設定
-	h1->GetXaxis()->SetNdivisions(50020);
 	// h1->GetYaxis()->SetNdivisions(505);
-	TCanvas *c1 = new TCanvas("c1", "Information about clusters", 1200, 800);
+	TCanvas *c1 = new TCanvas("c1", "Information about clusters", 1000, 1000);
 	p.share(c1);
 	c1->Divide(2,2);
 	for(Long64_t i = 0; i < res.size(); i++){
@@ -407,11 +443,18 @@ void analysis::Find_AutoCluster(MyClass* myobj){
 			}
 		}
 	}
-	h1->GetXaxis()->SetRangeUser(h1->GetMean() - 6 * h1->GetStdDev(), h1->GetMean() + 6 * h1->GetStdDev());
+	int h1_min = h1->GetBinCenter(h1->FindFirstBinAbove(0)), h1_max = h1->GetBinCenter(h1->FindLastBinAbove(0));
+	int h2_min = h2->GetBinCenter(h2->FindFirstBinAbove(0)), h2_max = h2->GetBinCenter(h2->FindLastBinAbove(0));
+
+	h1->GetXaxis()->SetRangeUser(h1_min, h1_max + 1);
+	h2->GetXaxis()->SetRangeUser(h2_min, h2_max + 1);
 	h1->SetFillColor(kAzure-9);
 	h2->SetFillColor(kGreen-9);
 	h3->SetFillColor(kPink-9);
 	
+	AdjustBinsToIntegers(h1, make_step(h1_min, h1_max));
+	AdjustBinsToIntegers(h2, make_step(h2_min, h2_max));
+
 	TText *text3 = new TText(50, (h3->GetMaximum()), "Separated every 10 events");
 	p.share(text3);
 	// pixel_maxの情報を追加
@@ -422,6 +465,7 @@ void analysis::Find_AutoCluster(MyClass* myobj){
 	c1->cd(3); h3->Sumw2(0);  h3->Draw(""); text3->Draw();
 	c1->cd(4); h4->Draw(""); text4->Draw();
 	c1->Update();
+	SaveCanvasWithHVPart(c1, path, "info");
 	Position_Resolution();
 }
 
@@ -444,19 +488,29 @@ void analysis::Position_Resolution(){
 
 		pixels_pos->Fill(pos.first, pos.second);
 	}
-	TCanvas *c1 = new TCanvas("hist2D", "Position_Resolution", 600, 800);
-	p.share(c1);
-	c1->Divide(1,2);
-	c1->cd(1);
+	TCanvas *hist2D = new TCanvas("hist2D", "Position_Resolution", 600, 600);
+	p.share(hist2D);
 	pixels_pos->Draw("COLZ");
-	c1->cd(2);
+	hist2D->Update();
+	SaveCanvasWithHVPart(hist2D, path, "pos");
+	TCanvas *hist1D_pjX = new TCanvas("hist1D_pjx", "ProjectionX", 600, 600);
+	p.share(hist1D_pjX);
 	TH1D *projX = new TH1D("projx", "projectionX", 30, 0, 30);
-	projX->Reset(); 
 	p.share(projX);
 	projX = pixels_pos->ProjectionX();
 	projX->Sumw2(0);
 	projX->Draw();
-	c1->Update();
+	hist1D_pjX->Update();
+	SaveCanvasWithHVPart(hist1D_pjX, path, "pjx");
+	TCanvas *hist1D_pjY = new TCanvas("hist1D_pjY", "ProjectionY", 600, 600);
+	p.share(hist1D_pjY);
+	TH1D *projY = new TH1D("projy", "projectionY", 30, 0, 30);
+	p.share(projY);
+	projY = pixels_pos->ProjectionY();
+	projY->Sumw2(0);
+	projY->Draw();
+	hist1D_pjY->Update();
+	SaveCanvasWithHVPart(hist1D_pjY, path, "pjy");
 }
 
 void analysis::read_param(param params){

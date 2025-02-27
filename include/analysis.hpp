@@ -13,6 +13,9 @@
 #include <TBox.h>
 #include <TF2.h>
 #include <TLine.h>
+#include <TH1D.h>
+#include <TMath.h>
+#include <TRegexp.h>
 #include <iostream>
 #include <stack>
 #include <set>
@@ -72,6 +75,20 @@ class analysis{
 	/// @brief この関数を起動すると、クラスターの外側を囲います。
 	/// @param lines このclassに外側の線の情報が格納されている。
 	void highlightv2(std::vector<TLine*> &lines);
+	/// @brief ヒストグラムのビンを整数し、かつ0.5の位置に整数を配置する
+	/// @param hist 対象のヒストグラム
+	/// @param step 指定したステップごとにラベルを表示するデフォルト引数は1
+	void AdjustBinsToIntegers(TH1D* histgram, Int_t step = 1);
+	/// @brief 必要なステップ数を計算する
+	/// @param min x軸のビンが入っている最小値 
+	/// @param max x軸のビンが入っている最大値
+	/// @return ステップ数を返す
+	int make_step(int min, int max);
+	/// @brief 
+	/// @param c1 
+	/// @param path 
+	/// @param customInfo 
+	void SaveCanvasWithHVPart(TCanvas* c1, const TString& path, const TString& customInfo);
 	/// @brief ある1イベントをその1イベントの閾値で作成し可視化する関数
 	void AnalyzeAndVisualizeClusters();
 	/// @brief ある1イベントを全てのイベントの同じ座標のピクセルを用いて閾値を作成し、可視化する関数
