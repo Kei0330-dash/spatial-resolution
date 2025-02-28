@@ -115,6 +115,7 @@ void MyMainFrame::OpenFile() {
     TString enteredPath = Get_EnteredPath();
 	if(state == ANALYZE_ONE_EVENT || state == ANALYZE_ALL_CLUSTERS){
 		state = NO_ACTION;
+		ANA->clear_pointer();
         ANA->closefile();
 	}
 	static TString dir(".");
@@ -174,10 +175,10 @@ param MyMainFrame::SettingParam(){
 }
 
 void MyMainFrame::init_ANALYZE(){
-	if(ANA == nullptr){
+	if(ANA == nullptr) {
 		ANA = std::make_unique<analysis>();
 	}
-	else if(state == ANALYZE_ONE_EVENT || state == ANALYZE_ALL_CLUSTERS){
+	else {
 		ANA->clear_pointer();
 	}
 	ANA->init_DataStructure();

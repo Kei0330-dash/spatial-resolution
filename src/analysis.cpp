@@ -81,22 +81,21 @@ ADC_DATA analysis::pedestal_subtract(){
 
 PIXEL_MEANS analysis::Get_one_pixel_means() {
 	int k_max = myobj->Get_EntryMax();
-	PIXEL_MEANS res((x_max - x_min), std::vector<double>(y_max - y_min));
+	PIXEL_MEANS res((x_max - x_min), std::vector<double>(y_max - y_min, 0));
 	for(int i = x_min; i < x_max; i++){
 		for(int j = y_min; j < y_max; j++){
-			TH1D* h1 = new TH1D();
 			for(int k = 0; i < k_max; k++){
 				int W = myobj->Get_ADC_one_Event(k, i, j);	
-				h1->Fill(W);
+				res[i][j] += W;
 			}
-			res[i][j] = create_threshold(h1->GetMean(), h1->GetStdDev());
-			delete h1;
+			res[i][j] = res[i][j] / k_max;
 		}
 	}
 	return res;
 }
 
 ADC_DATA analysis::means_subtract() {
+	if(!opt_subtract) return weight;
 	if(means.empty()){
 		means = Get_one_pixel_means();
 	}
@@ -471,9 +470,9 @@ void analysis::Find_AutoCluster(){
 	h1->SetFillColor(kAzure-9);
 	h2->SetFillColor(kGreen-9);
 	h3->SetFillColor(kPink-9);
-	
-	AdjustBinsToIntegers(h1, make_step(h1_min, h1_max));
-	// AdjustBinsToIntegers(h2, make_step(h2_min, h2_max), 1);
+
+	if(h1_max - h1_min <= 10) AdjustBinsToIntegers(h1, make_step(h1_min, h1_max));
+	if(h2_max - h2_min <= 10) AdjustBinsToIntegers(h2, make_step(h2_min, h2_max), 1);
 
 	std::shared_ptr<TText> text3 = std::make_shared<TText>(50, (h3->GetMaximum()), "Separated every 10 events");
 	p.share(text3);

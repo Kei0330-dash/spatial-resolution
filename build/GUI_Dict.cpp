@@ -37,6 +37,10 @@
 // Header files passed as explicit arguments
 #include "include/GUImain.hpp"
 #include "include/analysis.hpp"
+#include "include/block.hpp"
+#include "include/alias.hpp"
+#include "include/mem_root.hpp"
+#include "include/output.hpp"
 
 // Header files passed via #pragma extra_include
 
@@ -120,7 +124,6 @@ namespace ROOT {
    static void delete_MyMainFrame(void *p);
    static void deleteArray_MyMainFrame(void *p);
    static void destruct_MyMainFrame(void *p);
-   static void streamer_MyMainFrame(TBuffer &buf, void *obj);
 
    // Function generating the singleton type initializer
    static TGenericClassInfo *GenerateInitInstanceLocal(const ::MyMainFrame*)
@@ -130,12 +133,11 @@ namespace ROOT {
       static ::ROOT::TGenericClassInfo 
          instance("MyMainFrame", ::MyMainFrame::Class_Version(), "include/GUImain.hpp", 20,
                   typeid(::MyMainFrame), ::ROOT::Internal::DefineBehavior(ptr, ptr),
-                  &::MyMainFrame::Dictionary, isa_proxy, 16,
+                  &::MyMainFrame::Dictionary, isa_proxy, 4,
                   sizeof(::MyMainFrame) );
       instance.SetDelete(&delete_MyMainFrame);
       instance.SetDeleteArray(&deleteArray_MyMainFrame);
       instance.SetDestructor(&destruct_MyMainFrame);
-      instance.SetStreamerFunc(&streamer_MyMainFrame);
       return &instance;
    }
    TGenericClassInfo *GenerateInitInstance(const ::MyMainFrame*)
@@ -268,7 +270,11 @@ void MyMainFrame::Streamer(TBuffer &R__b)
 {
    // Stream an object of class MyMainFrame.
 
-   TGMainFrame::Streamer(R__b);
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(MyMainFrame::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(MyMainFrame::Class(),this);
+   }
 }
 
 namespace ROOT {
@@ -283,10 +289,6 @@ namespace ROOT {
       typedef ::MyMainFrame current_t;
       (static_cast<current_t*>(p))->~current_t();
    }
-   // Wrapper around a custom streamer member function.
-   static void streamer_MyMainFrame(TBuffer &buf, void *obj) {
-      ((::MyMainFrame*)obj)->::MyMainFrame::Streamer(buf);
-   }
 } // end of namespace ROOT for class ::MyMainFrame
 
 namespace {
@@ -294,6 +296,10 @@ namespace {
     static const char* headers[] = {
 "include/GUImain.hpp",
 "include/analysis.hpp",
+"include/block.hpp",
+"include/alias.hpp",
+"include/mem_root.hpp",
+"include/output.hpp",
 nullptr
     };
     static const char* includePaths[] = {
@@ -319,6 +325,10 @@ class __attribute__((annotate("$clingAutoload$include/GUImain.hpp")))  MyMainFra
 // Inline headers
 #include "include/GUImain.hpp"
 #include "include/analysis.hpp"
+#include "include/block.hpp"
+#include "include/alias.hpp"
+#include "include/mem_root.hpp"
+#include "include/output.hpp"
 
 #undef  _BACKWARD_BACKWARD_WARNING_H
 )DICTPAYLOAD";

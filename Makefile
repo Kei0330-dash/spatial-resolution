@@ -1,35 +1,45 @@
 # コンパイラとオプション
 CXX = g++
-CXXFLAGS = -std=c++11 $(shell root-config --cflags)
-LDFLAGS = $(shell root-config --glibs)
+CXXFLAGS = -g -std=c++11 $(shell root-config --cflags)
+LDFLAGS = $(shell root-config --cflags --glibs)
+
+# ディレクトリ
+BUILD_DIR = build
+SRC_DIR = src
+INC_DIR = include
 
 # ソースファイルとオブジェクトファイル
-SOURCES = src/GUImain.cpp build/GUI_Dict.cpp src/analysis.cpp src/block.cpp src/MyClass.cpp src/mem_root.cpp src/output.cpp
-OBJECTS = $(SOURCES:.cpp=.o)
+SOURCES = $(SRC_DIR)/GUImain.cpp $(SRC_DIR)/analysis.cpp $(SRC_DIR)/block.cpp \
+			$(SRC_DIR)/MyClass.cpp $(SRC_DIR)/mem_root.cpp $(SRC_DIR)/output.cpp $(BUILD_DIR)/GUI_Dict.cpp
+OBJECTS = $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
 # 実行ファイル
-EXECUTABLE = MyApp
-BUILD_DIR = build
+EXECUTABLE = $(BUILD_DIR)/MyApp
 
 # デフォルトターゲット
-all: $(BUILD_DIR)/$(EXECUTABLE)
+all: $(EXECUTABLE)
 
 # 実行ファイルのビルド
-$(BUILD_DIR)/$(EXECUTABLE): $(OBJECTS)
+$(EXECUTABLE): $(OBJECTS)
 	mkdir -p $(BUILD_DIR)
-	$(CXX) -g -o $@ $^ $(LDFLAGS)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 # オブジェクトファイルのビルド
-%.o: %.cpp
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	mkdir -p $(BUILD_DIR)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 # rootclingで辞書ファイルを生成
-$(BUILD_DIR)/GUI_Dict.cpp: include/GUImain.hpp include/analysis.hpp include/LinkDef.hpp include/block.hpp include/alias.hpp include/mem_root.hpp include/output.hpp
-	rootcling -f $(BUILD_DIR)/GUI_Dict.cpp -c include/GUImain.hpp include/analysis.hpp include/LinkDef.hpp
+$(BUILD_DIR)/GUI_Dict.cpp: $(INC_DIR)/GUImain.hpp $(INC_DIR)/analysis.hpp $(INC_DIR)/block.hpp \
+						$(INC_DIR)/alias.hpp $(INC_DIR)/mem_root.hpp $(INC_DIR)/output.hpp $(INC_DIR)/LinkDef.hpp
+	mkdir -p $(BUILD_DIR)
+	rootcling -f $@ -c $(INC_DIR)/GUImain.hpp $(INC_DIR)/analysis.hpp $(INC_DIR)/block.hpp \
+				$(INC_DIR)/alias.hpp $(INC_DIR)/mem_root.hpp $(INC_DIR)/output.hpp $(INC_DIR)/LinkDef.hpp
+
 
 # クリーンアップ
 clean:
-	rm -f $(OBJECTS) $(BUILD_DIR)/$(EXECUTABLE) $(BUILD_DIR)/GUI_Dict.cpp
+	rm -f $(BUILD_DIR)/*.o $(EXECUTABLE) $(BUILD_DIR)/GUI_Dict.cpp
 	rmdir $(BUILD_DIR)
 
 .PHONY: all clean
