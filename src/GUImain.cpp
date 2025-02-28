@@ -92,7 +92,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
 }
 
 MyMainFrame::~MyMainFrame() {
-	delete ANA;
+	ANA.reset();
     Cleanup();
 }
 
@@ -175,7 +175,7 @@ param MyMainFrame::SettingParam(){
 
 void MyMainFrame::init_ANALYZE(){
 	if(ANA == nullptr){
-		ANA = new analysis();
+		ANA = std::make_unique<analysis>();
 	}
 	else if(state == ANALYZE_ONE_EVENT || state == ANALYZE_ALL_CLUSTERS){
 		ANA->clear_pointer();

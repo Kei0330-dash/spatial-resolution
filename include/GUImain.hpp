@@ -5,7 +5,6 @@
 #include "param.hpp"
 #include "analysis.hpp"
 #include "output.hpp"
-#include <iostream>  // std::coutを使用するために追加
 #include <TGButton.h>
 #include <TGNumberEntry.h>
 // #include <TGCheckButton.h>
@@ -15,6 +14,8 @@
 #include <TGClient.h>
 #include <TGFileDialog.h>
 #include <TGTextEntry.h>
+#include <iostream>  // std::coutを使用するために追加
+#include <memory>
 
 class MyMainFrame : public TGMainFrame {
 public:
@@ -47,7 +48,7 @@ private:
 	TGNumberEntry *thresholdEntry;
 	TGNumberEntry *ClusterFilterEntry;
 	AnalyzeType state = NO_ACTION;
-	analysis *ANA = nullptr;
+	std::unique_ptr<analysis> ANA;
 	outputFrame* out = nullptr;
     ClassDef(MyMainFrame, 0);
 };

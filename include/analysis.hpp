@@ -24,13 +24,14 @@
 #include <string>
 #include <limits>
 #include <algorithm>
+#include <memory>
 
 
 class analysis{
 	private:
 	const int x_min = 0, x_max = 128;
 	const int y_min = 0, y_max = 128;
-	TFile *file = nullptr;
+	std::shared_ptr<TFile> file = nullptr;
 	mem_root p;
 	//ユーザーによって設定された値
 	bool opt_Red, opt_subtract, opt_Fitting, opt_AutoCluster;
@@ -45,7 +46,7 @@ class analysis{
 	double threshold;
 	int cluster_found;
 	PIXEL_MEANS means;
-	MyClass *myobj = nullptr;
+	std::unique_ptr <MyClass> myobj;
 	/// @brief 深さ優先探索を実行してクラスターの塊を走査する。ただし、直接呼ばずint call_dfs()を経由して呼び出すこと。
 	/// @param x ピクセルのx軸
 	/// @param y ピクセルのy軸
@@ -54,10 +55,10 @@ class analysis{
 	block dfs(int x, int y, THRESHOLD_MAP &map);
 	/// @brief 1次元のヒストグラムを作る。
 	/// @param h1 動的に確保したROOTの1次元ヒストグラム
-	void Fill_1Dhist(TH1D* &h1);
+	void Fill_1Dhist(std::shared_ptr<TH1D> h1);
 	/// @brief 2次元のヒストグラムを作る。
 	/// @param h2 動的に確保したROOTの2次元ヒストグラム
-	void Fill_2Dhist(TH2D* &h2);
+	void Fill_2Dhist(std::shared_ptr<TH2D> h2);
 	/// @brief ペデスタル減算をする。
 	/// @return 減算後の2次元の配列値を出力する。
 	ADC_DATA pedestal_subtract();
@@ -65,8 +66,8 @@ class analysis{
 	/// @param myobj 
 	/// @return 
 	PIXEL_MEANS Get_one_pixel_means();
-	/// @brief ペデスタルの平均値
-	ADC_DATA analysis::means_subtract();
+	/// @brief ペデスタルの平均値を引きます
+	ADC_DATA means_subtract();
 	/// @brief 深さ優先探索をするためのmapを作成する関数。
 	/// @return 閾値が超えた情報を格納した2次元の配列を返す。
 	THRESHOLD_MAP create_map();
@@ -85,7 +86,7 @@ class analysis{
 	/// @brief ヒストグラムのビンを整数し、かつ0.5の位置に整数を配置する
 	/// @param hist 対象のヒストグラム
 	/// @param step 指定したステップごとにラベルを表示するデフォルト引数は1
-	void AdjustBinsToIntegers(TH1D* histgram, Int_t step = 1, Int_t start = 0);
+	void AdjustBinsToIntegers(std::shared_ptr<TH1D> histgram, Int_t step = 1, Int_t start = 0);
 	/// @brief 必要なステップ数を計算する
 	/// @param min x軸のビンが入っている最小値 
 	/// @param max x軸のビンが入っている最大値
