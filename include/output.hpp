@@ -27,6 +27,7 @@ private:
     TGNumberEntry *numEntry;
 	param params;
 	TGLabel *SizeLabel;
+	TGLabel *ADCsumLabel;
 	TGLabel *CenterofGLabel;
     ClassDef(outputFrame, 0);
 };

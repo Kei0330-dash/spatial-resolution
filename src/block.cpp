@@ -31,8 +31,8 @@ double block::Get_ycenter() const{
 	return y_g;
 }
 
-double block::Get_ADCsum() const{
-	return ADCsum;
+int block::Get_ADCsum() const{
+	return (int)ADCsum;
 }
 
 double block::Get_xmin() const{

@@ -14,7 +14,7 @@ public:
 	int    Get_eventnum() const;
     double Get_xcenter() const;
     double Get_ycenter() const;
-    double Get_ADCsum() const;
+    int Get_ADCsum() const;
 	double Get_xmin() const;
 	double Get_xmax() const;
 	double Get_ymin() const;
