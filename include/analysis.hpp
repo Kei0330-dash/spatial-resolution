@@ -81,8 +81,7 @@ class analysis{
 	/// @param lines このclassに外側の線が入っている。
 	void highlight(std::vector<TLine*> &lines);
 	/// @brief この関数を起動すると、クラスターの外側を囲います。
-	/// @param lines このclassに外側の線の情報が格納されている。
-	void highlightv2(std::vector<TLine*> &lines);
+	void highlightv2();
 	/// @brief ヒストグラムのビンを整数し、かつ0.5の位置に整数を配置する
 	/// @param hist 対象のヒストグラム
 	/// @param step 指定したステップごとにラベルを表示するデフォルト引数は1

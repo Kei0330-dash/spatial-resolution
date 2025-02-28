@@ -214,8 +214,10 @@ void analysis::highlight(std::vector<TLine*> &lines){
 	}
 }
 
-void analysis::highlightv2(std::vector<TLine*> &lines){
+void analysis::highlightv2(){
+	if(!opt_Red) return;
 	int size = cluster.size();
+	std::vector<std::shared_ptr<TLine>> lines;
 	for(int ci = 0; ci < size; ci++){
 		std::set<std::tuple<int, int, int>> place;
 		place = cluster[ci].Get_set();
@@ -229,23 +231,23 @@ void analysis::highlightv2(std::vector<TLine*> &lines){
 				for(int k = 0; k < 4; k++){
 					int nx = i + dx[k]; int ny = j + dy[k];
 					if(x_min <= nx && nx < x_max && y_min <= ny && ny < y_max && origin_map[nx][ny] != 'W'){
-						TLine *line;
+						std::shared_ptr<TLine> line;
 						switch (k){
 							case 0:{
-								line = new TLine(i, j, i, j + 1);
+								line = std::make_shared<TLine>(i, j, i, j + 1);
 								break;
 							}
 							case 1:{
-								line = new TLine(i, j, i + 1, j);
+								line = std::make_shared<TLine>(i, j, i + 1, j);
 								break;
 							}
 							case 2:{
-								line = new TLine(i, j + 1, i + 1, j + 1);
+								line = std::make_shared<TLine>(i, j + 1, i + 1, j + 1);
 								break;
 							}
 							
 							default:{
-								line = new TLine(i + 1, j, i + 1, j + 1);
+								line = std::make_shared<TLine>(i + 1, j, i + 1, j + 1);
 								break;
 							}
 						}
@@ -256,11 +258,13 @@ void analysis::highlightv2(std::vector<TLine*> &lines){
 		}
 	}
 	// すべてのラインを描画
-	for(TLine* line : lines) {
+	for(auto line : lines) {
+		p.share(line);
 		line->SetLineColor(kRed);
 		line->SetLineWidth(2);
 		line->Draw("same");
 	}
+	return;
 }
 
 void analysis::AdjustBinsToIntegers(std::shared_ptr<TH1D> histgram, Int_t step, Int_t start) {
@@ -316,8 +320,6 @@ void analysis::AnalyzeAndVisualizeClusters(){
 	thre_line->Draw("same");
 	hist1D->Update();
 
-	
-
 	//2次元マップの作成
 	weight = pedestal_subtract();
 	origin_map = create_map();
@@ -345,13 +347,8 @@ void analysis::AnalyzeAndVisualizeClusters(){
 	std::shared_ptr<TCanvas> hist2D = std::make_shared<TCanvas>("hist2D", "2D Histogram", 600, 400);
 	p.share(hist2D);
 	h2->Draw("COLZ");
-	// std::vector<TLine*> lines;
-	// p.share(lines);
-	// if(opt_Red) {
-	// 	highlightv2(lines);
-	// }
+	highlightv2();
 	hist2D->Update();
-
 }
 
 void analysis::AnalyzeAndVisualizeClusters(MyClass* myobj){
@@ -464,13 +461,8 @@ void analysis::Find_AutoCluster(){
 	Fill_1Dhist(hist);
 	//閾値の設定
 	threshold = create_threshold(hist->GetMean(), hist->GetStdDev()); 
-	for(int i = x_min; i < x_max; i++){
-		for(int j = y_min; j < y_max; j++){
-			if(weight[i][j]){
-				h4->Fill(i, j, weight[i][j]);
-			}
-		}
-	}
+	weight = pedestal_subtract();
+	Fill_2Dhist(h4);
 	int h1_min = h1->GetBinCenter(h1->FindFirstBinAbove(0)), h1_max = h1->GetBinCenter(h1->FindLastBinAbove(0));
 	int h2_min = h2->GetBinCenter(h2->FindFirstBinAbove(0)), h2_max = h2->GetBinCenter(h2->FindLastBinAbove(0));
 
@@ -494,59 +486,67 @@ void analysis::Find_AutoCluster(){
 	c1->cd(4); h4->Draw(""); text4->Draw();
 	c1->Update();
 	//SaveCanvasWithHVPart(c1, path, "info");
-	//Position_Resolution();
+	Position_Resolution();
 }
 
 void analysis::Position_Resolution(){
-	// int size = cluster.size();
-	// TH2D *pixels_pos = new TH2D("pixels_pos", "Position_Resolution", 30, 0, 30, 30, 0, 30);
-	// pixels_pos->Reset();
-	// p.share(pixels_pos);
-	// for(int i = 0; i < size; i++){
-	// 	std::pair<double, double> grav;
-	// 	grav.first = cluster[i].Get_xcenter();
-	// 	grav.second = cluster[i].Get_ycenter();
-	// 	//SOFIST3の30umの位置情報に変換(0を中央にする)
-	// 	std::pair<int, int> pos;
-	// 	pos.first = (grav.first + 0.5) * 30;
-	// 	pos.second = (grav.second + 0.5) * 30;
-	// 	//剰余計算をし、行と列のどこに格納されるか計算。
-	// 	pos.first = pos.first % 30; 
-	// 	pos.second = pos.second % 30;
+	int size = cluster.size();
+	std::shared_ptr<TH2D> pixels_pos = std::make_shared<TH2D>("pixels_pos", "Position_Resolution", 30, 0, 30, 30, 0, 30);
+	pixels_pos->Reset();
+	p.share(pixels_pos);
+	for(int i = 0; i < size; i++){
+		std::pair<double, double> grav;
+		grav.first = cluster[i].Get_xcenter();
+		grav.second = cluster[i].Get_ycenter();
+		//SOFIST3の30umの位置情報に変換(0を中央にする)
+		std::pair<int, int> pos;
+		pos.first = (grav.first + 0.5) * 30;
+		pos.second = (grav.second + 0.5) * 30;
+		//剰余計算をし、行と列のどこに格納されるか計算。
+		pos.first = pos.first % 30; 
+		pos.second = pos.second % 30;
 
-	// 	pixels_pos->Fill(pos.first, pos.second);
-	// }
-	// TCanvas *hist2D = new TCanvas("hist2D", "Position_Resolution", 600, 600);
-	// p.share(hist2D);
-	// pixels_pos->Draw("COLZ");
-	// hist2D->Update();
+		pixels_pos->Fill(pos.first, pos.second);
+	}
+	std::shared_ptr<TCanvas> hist2D = std::make_shared<TCanvas>("hist2D", "Position_Resolution", 600, 600);
+	p.share(hist2D);
+	pixels_pos->Draw("COLZ");
+	hist2D->Update();
 	// SaveCanvasWithHVPart(hist2D, path, "pos");
-	// TCanvas *hist1D_pjX = new TCanvas("hist1D_pjx", "ProjectionX", 600, 600);
-	// p.share(hist1D_pjX);
-	// TH1D *projX;
-	// projX = pixels_pos->ProjectionX();
-	// projX->SetTitle("ProjectionX");
-	// double stddev_X = projX->GetStdDev();
-	// TText *text1 = new TText(20, (projX->GetMaximum()), Form("sigma: %.2f", stddev_X));
-	// p.share(text1);
-	// p.share(projX);
-	// projX->Sumw2(0);
-	// projX->Draw();
-	// text1->Draw();
-	// hist1D_pjX->Update();
+	std::shared_ptr<TCanvas> hist1D_pjX = std::make_shared<TCanvas>("hist1D_pjx", "ProjectionX", 600, 600);
+	p.share(hist1D_pjX);
+	std::shared_ptr<TH1D> projX(pixels_pos->ProjectionX(), [](TH1D* ptr) {
+		if (ptr) {
+			delete ptr; // メモリを解放
+		}
+	});
+	projX->SetTitle("ProjectionX");
+	double stddev_X = projX->GetStdDev();
+	std::shared_ptr<TText> text1 = std::make_shared<TText>(20, (projX->GetMaximum()), Form("sigma: %.2f", stddev_X));
+	p.share(text1);
+	p.share(projX);
+	projX->Sumw2(0);
+	projX->Draw();
+	text1->Draw();
+	hist1D_pjX->Update();
 	// SaveCanvasWithHVPart(hist1D_pjX, path, "pjx");
-	// TCanvas *hist1D_pjY = new TCanvas("hist1D_pjY", "ProjectionY", 600, 600);
-	// p.share(hist1D_pjY);
-	// TH1D *projY;
-	// projY = pixels_pos->ProjectionY();
-	// projY->SetTitle("ProjectionY");
-	// p.share(projY);
-	// double stddev_Y = projY->GetStdDev();
-	// TText *text2 = new TText(20, (projY->GetMaximum()), Form("sigma: %.2f", stddev_Y));
-	// projY->Sumw2(0);
-	// projY->Draw();
-	// text2->Draw();
-	// hist1D_pjY->Update();
+	std::shared_ptr<TCanvas> hist1D_pjY = std::make_shared<TCanvas>("hist1D_pjY", "ProjectionY", 600, 600);
+	p.share(hist1D_pjY);
+	// TH1D* を shared_ptr にラップして管理
+	std::shared_ptr<TH1D> projY(pixels_pos->ProjectionY(), [](TH1D* ptr) {
+		if (ptr) {
+			delete ptr; // メモリを解放
+		}
+	});
+	projY->SetTitle("ProjectionY");
+	p.share(projY);
+	double stddev_Y = projY->GetStdDev();
+	std::shared_ptr<TText> text2 = std::make_shared<TText>(20, (projY->GetMaximum()), Form("sigma: %.2f", stddev_Y));
+	p.share(text2);
+	projY->Sumw2(0);
+	projY->Draw();
+	text2->Draw();
+	hist1D_pjY->Update();
 	// SaveCanvasWithHVPart(hist1D_pjY, path, "pjy");
 }
 
