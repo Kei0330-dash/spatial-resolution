@@ -44,56 +44,44 @@ void mem_root::erase_pointer(){
 	try{
 		if(!th1d.empty()){
 			for(auto& h1 : th1d){
-				if(h1){
 					delete h1;
 					h1 = nullptr;
-				}
 			}
 			th1d.clear();
 		}
 		if(!th2d.empty()){
 			for(auto& h2 : th2d){
-				if(h2){
-					delete h2;
-					h2 = nullptr;
-				}
+				delete h2;
+				h2 = nullptr;
 			}
 			th2d.clear();
 		}
 		if(!tcanvas.empty()){
 			for(auto& c1 : tcanvas){
-				if(c1){
-					delete c1;
-					c1 = nullptr;
-				}
+				delete c1;
+				c1 = nullptr;
 			}
 			tcanvas.clear();
 		}
 		if(!ttext.empty()){
 			for(auto& t : ttext){
-				if(t){
-					delete t;
-					t = nullptr;
-				}
+				delete t;
+				t = nullptr;
 			}
 			ttext.clear();
 		}
 		if(!tline.empty()){
 			for(auto& l : tline){
-				if(l){
-					delete l;
-					l = nullptr;
-				}
+				delete l;
+				l = nullptr;
 			}
 			tline.clear();
 		}
 		if(!tlines.empty()){
 			for(int i = 0; i < tlines.size(); i++){
 				for(auto& l : tlines[i]){
-					if(l){
-						delete l;
-						l = nullptr;
-					}
+					delete l;
+					l = nullptr;
 				}
 				tlines[i].clear();
 			}

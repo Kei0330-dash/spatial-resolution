@@ -42,6 +42,7 @@ public :
 //    virtual void Find_AutoCluster(bool opt_sub);
    //ADC値を配列からvectorにして返す関数
    virtual ADC_DATA Get_ADC(Int_t event_num);
+   virtual int      Get_ADC_one_Event(Int_t entry_num, Int_t x, Int_t y);
    virtual int      Get_EntryMax();
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);

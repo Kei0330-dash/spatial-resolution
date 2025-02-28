@@ -44,7 +44,8 @@ class analysis{
 	CLUSTER_DATA cluster;
 	double threshold;
 	int cluster_found;
-	std::vector<std::vector<double>> thresholds;
+	PIXEL_MEANS means;
+	MyClass *myobj = nullptr;
 	/// @brief 深さ優先探索を実行してクラスターの塊を走査する。ただし、直接呼ばずint call_dfs()を経由して呼び出すこと。
 	/// @param x ピクセルのx軸
 	/// @param y ピクセルのy軸
@@ -60,6 +61,12 @@ class analysis{
 	/// @brief ペデスタル減算をする。
 	/// @return 減算後の2次元の配列値を出力する。
 	ADC_DATA pedestal_subtract();
+	/// @brief 
+	/// @param myobj 
+	/// @return 
+	PIXEL_MEANS Get_one_pixel_means();
+	/// @brief ペデスタルの平均値
+	ADC_DATA analysis::means_subtract();
 	/// @brief 深さ優先探索をするためのmapを作成する関数。
 	/// @return 閾値が超えた情報を格納した2次元の配列を返す。
 	THRESHOLD_MAP create_map();
@@ -78,7 +85,7 @@ class analysis{
 	/// @brief ヒストグラムのビンを整数し、かつ0.5の位置に整数を配置する
 	/// @param hist 対象のヒストグラム
 	/// @param step 指定したステップごとにラベルを表示するデフォルト引数は1
-	void AdjustBinsToIntegers(TH1D* histgram, Int_t step = 1);
+	void AdjustBinsToIntegers(TH1D* histgram, Int_t step = 1, Int_t start = 0);
 	/// @brief 必要なステップ数を計算する
 	/// @param min x軸のビンが入っている最小値 
 	/// @param max x軸のビンが入っている最大値
@@ -95,8 +102,7 @@ class analysis{
 	/// @param myobj このクラスを用いて、全イベント分のデータを読み込むため必要。
 	void AnalyzeAndVisualizeClusters(MyClass* myobj);
 	/// @brief 左上からそれぞれクラスター数（青），クラスターサイズ（緑），10イベントごとのクラスター数（マゼンタ），クラスターサイズが一番大きかったイベントをプロットしたものを出力
-	/// @param myobj このクラスを用いて、全イベント分のデータを読み込むため必要。
-	void Find_AutoCluster(MyClass* myobj);
+	void Find_AutoCluster();
 	/// @brief 位置分解能を評価するための関数
 	void Position_Resolution();
 	/// @brief 入力パラメータを読み込む

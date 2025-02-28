@@ -28,4 +28,6 @@ using ADC_DATA = std::vector<std::vector<int>>;
 using THRESHOLD_MAP = std::vector<std::vector<char>>;
 /// @brief クラスターの塊の情報を格納したもの
 using CLUSTER_DATA = std::vector<block>;
+/// @brief ペデスタル減算をするための各ピクセル毎の平均値
+using PIXEL_MEANS = std::vector<std::vector<double>>;
 #endif

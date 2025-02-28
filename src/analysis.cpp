@@ -21,6 +21,7 @@
 #include <string>
 #include <limits>
 #include <algorithm>
+#include <memory>
 
 block analysis::dfs(int x, int y, THRESHOLD_MAP &map){
 	std::stack<std::pair<int, int>> st;
@@ -76,6 +77,36 @@ ADC_DATA analysis::pedestal_subtract(){
 		}
 	}
 	return ADC;
+}
+
+PIXEL_MEANS analysis::Get_one_pixel_means() {
+	int k_max = myobj->Get_EntryMax();
+	PIXEL_MEANS res((x_max - x_min), std::vector<double>(y_max - y_min));
+	for(int i = x_min; i < x_max; i++){
+		for(int j = y_min; j < y_max; j++){
+			TH1D* h1 = new TH1D();
+			for(int k = 0; i < k_max; k++){
+				int W = myobj->Get_ADC_one_Event(k, i, j);	
+				h1->Fill(W);
+			}
+			res[i][j] = create_threshold(h1->GetMean(), h1->GetStdDev());
+			delete h1;
+		}
+	}
+	return res;
+}
+
+ADC_DATA analysis::means_subtract() {
+	if(means.empty()){
+		means = Get_one_pixel_means();
+	}
+	ADC_DATA adc = weight;
+	for(Long64_t i = x_min; i < x_max; i++){
+		for(Long64_t j = y_min; j < y_max; j++){
+			adc[i][j] -= means[i][j];
+		}
+	}
+	return adc;
 }
 
 THRESHOLD_MAP analysis::create_map(){
@@ -232,9 +263,9 @@ void analysis::highlightv2(std::vector<TLine*> &lines){
 	}
 }
 
-void analysis::AdjustBinsToIntegers(TH1D* histgram, Int_t step) {
+void analysis::AdjustBinsToIntegers(TH1D* histgram, Int_t step, Int_t start) {
     for (Int_t i = 1; i <= histgram->GetNbinsX(); ++i) {
-        if ((i - 1) % step == 0) {
+        if ((i - 1) % step == start) {
             histgram->GetXaxis()->SetBinLabel(i, Form("%d", i - 1));
         } else {
             histgram->GetXaxis()->SetBinLabel(i, "");
@@ -379,7 +410,7 @@ void analysis::AnalyzeAndVisualizeClusters(MyClass* myobj){
 
 }
 
-void analysis::Find_AutoCluster(MyClass* myobj){
+void analysis::Find_AutoCluster(){
 	gStyle->SetOptStat(0);
 	//使用する変数。
 	Long64_t nentries;
@@ -453,7 +484,7 @@ void analysis::Find_AutoCluster(MyClass* myobj){
 	h3->SetFillColor(kPink-9);
 	
 	AdjustBinsToIntegers(h1, make_step(h1_min, h1_max));
-	AdjustBinsToIntegers(h2, make_step(h2_min, h2_max));
+	// AdjustBinsToIntegers(h2, make_step(h2_min, h2_max), 1);
 
 	TText *text3 = new TText(50, (h3->GetMaximum()), "Separated every 10 events");
 	p.share(text3);
@@ -495,20 +526,29 @@ void analysis::Position_Resolution(){
 	SaveCanvasWithHVPart(hist2D, path, "pos");
 	TCanvas *hist1D_pjX = new TCanvas("hist1D_pjx", "ProjectionX", 600, 600);
 	p.share(hist1D_pjX);
-	TH1D *projX = new TH1D("projx", "projectionX", 30, 0, 30);
-	p.share(projX);
+	TH1D *projX;
 	projX = pixels_pos->ProjectionX();
+	projX->SetTitle("ProjectionX");
+	double stddev_X = projX->GetStdDev();
+	TText *text1 = new TText(20, (projX->GetMaximum()), Form("sigma: %.2f", stddev_X));
+	p.share(text1);
+	p.share(projX);
 	projX->Sumw2(0);
 	projX->Draw();
+	text1->Draw();
 	hist1D_pjX->Update();
 	SaveCanvasWithHVPart(hist1D_pjX, path, "pjx");
 	TCanvas *hist1D_pjY = new TCanvas("hist1D_pjY", "ProjectionY", 600, 600);
 	p.share(hist1D_pjY);
-	TH1D *projY = new TH1D("projy", "projectionY", 30, 0, 30);
-	p.share(projY);
+	TH1D *projY;
 	projY = pixels_pos->ProjectionY();
+	projY->SetTitle("ProjectionY");
+	p.share(projY);
+	double stddev_Y = projY->GetStdDev();
+	TText *text2 = new TText(20, (projY->GetMaximum()), Form("sigma: %.2f", stddev_Y));
 	projY->Sumw2(0);
 	projY->Draw();
+	text2->Draw();
 	hist1D_pjY->Update();
 	SaveCanvasWithHVPart(hist1D_pjY, path, "pjy");
 }
@@ -544,7 +584,6 @@ analysis::~analysis(){
 
 AnalyzeType analysis::runMyClass(param &params) {
 	read_param(params);
-	MyClass *myobj = nullptr;
 	if(!file){
 		file = TFile::Open(path);
 		if (!file || file->IsZombie()) {
@@ -559,12 +598,10 @@ AnalyzeType analysis::runMyClass(param &params) {
 		weight = myobj->Get_ADC(event_num);
 		AnalyzeAndVisualizeClusters();
 		write_param(params);
-		delete myobj;
 		return ANALYZE_ONE_EVENT;
 	}
 	else{
-		Find_AutoCluster(myobj);
-		delete myobj;
+		Find_AutoCluster();
 		return ANALYZE_ALL_CLUSTERS;
 	}
 

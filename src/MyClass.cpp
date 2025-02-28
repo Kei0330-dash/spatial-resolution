@@ -22,6 +22,14 @@ ADC_DATA MyClass::Get_ADC(Int_t entry_num){
 	return res;
 }
 
+int MyClass::Get_ADC_one_Event(Int_t entry_num, Int_t x, Int_t y){
+	Long64_t nentries;
+	nentries = fChain->GetEntriesFast();
+	fChain->GetEntry(entry_num);
+	int res = (int)ADC[x][y];
+	return res;
+}
+
 void MyClass::Loop(Int_t entry_num, bool opt_Red, bool opt_sub, bool opt_fit){
 	// //使用する変数。
 	// THRESHOLD_MAP map(x_max, std::vector<char>(y_max));
