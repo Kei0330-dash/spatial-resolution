@@ -28,6 +28,7 @@ public:
     int Get_Entry_num();
     bool Get_Option_Red();
     bool Get_Option_Subtract();
+	bool Get_Option_meanSubtract();
     bool Get_Option_Fitting();
 	double Get_SettingThreshold();
 	int Get_Filter_ClusterSize();
@@ -40,11 +41,14 @@ private:
     TGNumberEntry *numEntry;
     TGCheckButton *Option_Red;
     TGCheckButton *Option_Subtract;
+    TGCheckButton *Option_meanSubtract;
     TGCheckButton *Option_Fitting;
     TGTextButton *Run_analysis;
 	TGTextButton *SearchCluster_Button;
 	TGTextButton *Open_file;
 	TGTextEntry *pathEntry;
+    TGCheckButton *Option_save;
+	TGTextEntry *saveEntry;
 	TGNumberEntry *thresholdEntry;
 	TGNumberEntry *ClusterFilterEntry;
 	AnalyzeType state = NO_ACTION;

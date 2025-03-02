@@ -28,10 +28,12 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
     TGGroupFrame *checkBoxFrame = new TGGroupFrame(OptionFrame, "Input Your Analysis Option");
     Option_Red = new TGCheckButton(checkBoxFrame, "Option_Red");
     Option_Subtract = new TGCheckButton(checkBoxFrame, "Option_Subtract");
+	Option_meanSubtract = new TGCheckButton(checkBoxFrame, "Option_meanSubtract");
     Option_Fitting = new TGCheckButton(checkBoxFrame, "Option_Fitting");
     checkBoxFrame->AddFrame(Option_Red, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
     checkBoxFrame->AddFrame(Option_Subtract, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
-    checkBoxFrame->AddFrame(Option_Fitting, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+    checkBoxFrame->AddFrame(Option_meanSubtract, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+	checkBoxFrame->AddFrame(Option_Fitting, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
 	OptionFrame->AddFrame(checkBoxFrame, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 40, 10, 10, 10));
     SettingFrame_General->AddFrame(OptionFrame, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
 
@@ -45,6 +47,18 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
 	pathFrame->AddFrame(Open_file, new TGLayoutHints(kLHintsRight | kLHintsCenterY, 5, 5, 5, 5));
     SettingFrame_General->AddFrame(pathFrame, new TGLayoutHints(kLHintsCenterX | kLHintsTop, 10, 10, 10, 10));
 	//　ここまでパス入力フィールド
+
+
+	// // セーブ入力フィールドを含む水平フレームを作成
+	// TGHorizontalFrame *saveFrame = new TGHorizontalFrame(SettingFrame_General, 400, 50);
+	// TGLabel *pathLabel = new TGLabel(saveFrame, "Input Your Data Path:");
+	// saveEntry = new TGTextEntry(saveFrame, new TGTextBuffer(30));
+	// Option_save = new TGCheckButton(saveFrame, "");
+	// saveFrame->AddFrame(pathLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5, 5, 5, 5));
+	// saveFrame->AddFrame(pathEntry, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 5, 5, 5, 5));
+	// saveFrame->AddFrame(Open_file, new TGLayoutHints(kLHintsRight | kLHintsCenterY, 5, 5, 5, 5));
+	// SettingFrame_General->AddFrame(saveFrame, new TGLayoutHints(kLHintsCenterX | kLHintsTop, 10, 10, 10, 10));
+	// //　ここまでセーブ入力フィールド
 
     // ボタンを含む水平フレームを作成
     TGHorizontalFrame *buttonFrame = new TGHorizontalFrame(SettingFrame_General, 200, 50);
@@ -113,17 +127,18 @@ void MyMainFrame::SearchCluster() {
 
 void MyMainFrame::OpenFile() {
     TString enteredPath = Get_EnteredPath();
-	if(state == ANALYZE_ONE_EVENT || state == ANALYZE_ALL_CLUSTERS){
-		state = NO_ACTION;
-		ANA->clear_pointer();
-        ANA->closefile();
-	}
 	static TString dir(".");
 	TGFileInfo fileInfo;
 	fileInfo.fFileTypes = fileTypes;
 	fileInfo.fIniDir = StrDup(dir);
 	new TGFileDialog(gClient->GetDefaultRoot(), this, kFDOpen, &fileInfo);
 	if (fileInfo.fFilename) {
+		if (state == ANALYZE_ONE_EVENT || state == ANALYZE_ALL_CLUSTERS) {
+			state = NO_ACTION;
+			ANA->change_file();
+			ANA->clear_pointer();
+			ANA->closefile();
+		}
 		dir = fileInfo.fIniDir;
 		std::cout << "Opened file: " << fileInfo.fFilename << std::endl;
 		pathEntry->SetText(fileInfo.fFilename);  // ファイルパスをテキストエントリーに設定
@@ -150,6 +165,10 @@ bool MyMainFrame::Get_Option_Subtract() {
     return Option_Subtract->IsOn();
 }
 
+bool MyMainFrame::Get_Option_meanSubtract() {
+    return Option_meanSubtract->IsOn();
+}
+
 bool MyMainFrame::Get_Option_Fitting() {
     return Option_Fitting->IsOn();
 }
@@ -170,7 +189,7 @@ param MyMainFrame::SettingParam(){
 		throw std::runtime_error("Error: No file path specified");
 	}
 
-	param params(Get_SettingThreshold(), Get_Filter_ClusterSize(), Get_Option_Red(), Get_Option_Subtract(), Get_Option_Fitting(), false, Get_Entry_num(), Get_EnteredPath());
+	param params(Get_SettingThreshold(), Get_Filter_ClusterSize(), Get_Option_Red(), Get_Option_Subtract(), Get_Option_meanSubtract(), Get_Option_Fitting(), false, Get_Entry_num(), Get_EnteredPath());
 	return params;
 }
 

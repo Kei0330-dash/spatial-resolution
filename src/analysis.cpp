@@ -82,12 +82,18 @@ ADC_DATA analysis::pedestal_subtract(){
 PIXEL_MEANS analysis::Get_one_pixel_means() {
 	int k_max = myobj->Get_EntryMax();
 	PIXEL_MEANS res((x_max - x_min), std::vector<double>(y_max - y_min, 0));
+	for(int k = 0; k < k_max; k++){
+		ADC_DATA W = myobj->Get_ADC(k);	
+		for(int i = x_min; i < x_max; i++){
+			for(int j = y_min; j < y_max; j++){
+				res[i][j] += W[i][j];
+			}
+		}
+		printf("%d\n", k);
+	}
+
 	for(int i = x_min; i < x_max; i++){
 		for(int j = y_min; j < y_max; j++){
-			for(int k = 0; i < k_max; k++){
-				int W = myobj->Get_ADC_one_Event(k, i, j);	
-				res[i][j] += W;
-			}
 			res[i][j] = res[i][j] / k_max;
 		}
 	}
@@ -95,7 +101,7 @@ PIXEL_MEANS analysis::Get_one_pixel_means() {
 }
 
 ADC_DATA analysis::means_subtract() {
-	if(!opt_subtract) return weight;
+	if(!opt_meanSubtract) return weight;
 	if(means.empty()){
 		means = Get_one_pixel_means();
 	}
@@ -282,7 +288,7 @@ int analysis::make_step(int min, int max){
 	return res;
 }
 
-void analysis::SaveCanvasWithHVPart(TCanvas* c1, const TString& path, const TString& customInfo) {
+void analysis::Save(TCanvas* c1, const TString& path, const TString& customInfo) {
     // 正規表現で"HV"と数字部分を抽出
     TRegexp reg("HV[0-9]+");
     Ssiz_t pos = path.Index(reg);
@@ -302,6 +308,7 @@ void analysis::SaveCanvasWithHVPart(TCanvas* c1, const TString& path, const TStr
 
 void analysis::AnalyzeAndVisualizeClusters(){
 	//1次元ヒストグラムの作成
+	weight = means_subtract();
 	std::shared_ptr<TH1D> h1 = std::make_shared<TH1D>("h1", "ADC Distribution;ADC;Number of Entries", 1600, 0, 8000);
 	p.share(h1);
 	Fill_1Dhist(h1);
@@ -351,62 +358,10 @@ void analysis::AnalyzeAndVisualizeClusters(){
 }
 
 void analysis::AnalyzeAndVisualizeClusters(MyClass* myobj){
-	// //1次元ヒストグラムの作成
-	// TH1D *h1 = new TH1D("h1", "ADC Distribution;ADC;Number of Entries", 1600, 0, 8000);
-	// p.share(h1);
-	// int nentries = myobj->Get_EntryMax();
-	// for(int i = 0; i < nentries; i++){
-	// 	weight = myobj->Get_ADC(i);
-	// 	Fill_1Dhist(h1);
-	// }
-	// h1->GetXaxis()->SetRangeUser(h1->GetMean() - 6 * h1->GetStdDev(), h1->GetMean() + 6 * h1->GetStdDev());
-
-	// TCanvas *hist1D = new TCanvas("hist1D", "1D Histogram", 600, 400);
-	// p.share(hist1D);
-	// h1->Draw();
-	// hist1D->Update();
-
-	// //閾値の設定
-	// threshold = create_threshold(h1->GetMean(), h1->GetStdDev());
-	// std::cout << "Threshold: " << threshold << std::endl;
-
-	// //2次元マップの作成
-	// weight = pedestal_subtract();
-	// origin_map = create_map();
-	// cluster_found = call_dfs();
-	// std::cout << "Cluster count: " << cluster_found << std::endl;//0は一時的な修正
-
-	// //クラスターがある場合、重心を求める
-	// if(!cluster.empty()){
-	// 	for(int i = 0; i < cluster.size(); i++){
-	// 		std::pair<double, double> ans;
-	// 		ans.first = cluster[i].Get_xcenter();
-	// 		ans.second = cluster[i].Get_ycenter();
-	// 		std::cout << "Center of gravity: " << ans.first << ", " << ans.second << std::endl;
-	// 	}
-	// }
-
-	// //2次元ヒストグラムの作成
-	// TH2D *h2 = new TH2D("h2", "Pixel Distribution;X;Y", (x_max - x_min), x_min, x_max, (y_max - y_min), y_min, y_max);
-	// p.share(h2);
-	// h2->Sumw2();
-	// h2->SetStats(0);
-	// Fill_2Dhist(h2);
-
-	// //閾値を超えた部分を強調表示
-	// TCanvas *hist2D = new TCanvas("hist2D", "2D Histogram", 600, 400);
-	// p.share(hist2D);
-	// h2->Draw("COLZ");
-	// std::vector<TLine*> lines;
-	// p.share(lines);
-	// if(opt_Red) {
-	// 	highlight(lines);
-	// }
-	// hist2D->Update();
 }
 
 void analysis::Find_AutoCluster(){
-	gStyle->SetOptStat(0);
+	// gStyle->SetOptStat(0);
 	//使用する変数。
 	Long64_t nentries;
 	//クラスターがあるエントリーナンバーを全て返す
@@ -415,25 +370,28 @@ void analysis::Find_AutoCluster(){
 
 	for(Long64_t entry_num = 0; entry_num < nentries; entry_num++){
 		weight = myobj->Get_ADC(entry_num);
-
-		std::shared_ptr<TH1D> hist = std::make_shared<TH1D>("hist", "1D Histogram;X;Entries", 100, 700, 1800);
+		weight = means_subtract();
+		printf("%d: ", entry_num);
+		std::shared_ptr<TH1D> hist = std::make_shared<TH1D>("hist", "1D Histogram;X;Entries", 2400, -4000, 8000);
 		Fill_1Dhist(hist);
 		//閾値の設定
-		threshold = hist->GetMean() + num_sigma * hist->GetStdDev(); 
+		threshold = create_threshold(hist->GetMean(), hist->GetStdDev()); 
+		printf("Mean:%f, StdDev:%f ", hist->GetMean(), hist->GetStdDev());
+		printf("threshold:%f ", threshold);
 		weight = pedestal_subtract();
 		origin_map = create_map();
-
 		event_num = entry_num;
 		int ans = call_dfs();
-
+		printf("size:%d\n", ans);
 		res[entry_num] = std::make_pair(entry_num, ans); 
-		
+		hist.reset();
 	}
+
 	std::shared_ptr<TH1D> h1 = std::make_shared<TH1D>("h1", "Number of Clusters per Event;Number of Clusters;Number of Events", 1000, 0, 1000);
 	p.share(h1);
 	std::shared_ptr<TH1D> h2 = std::make_shared<TH1D>("h2", "Cluster Size Distribution;Cluster Size;Number of Events", 1000, 0, 1000);
 	p.share(h2);
-	std::shared_ptr<TH1D> h3 = std::make_shared<TH1D>("h3", "Distribution of Clusters in number of Events;Entry num;Number of Events", nentries / 10, 0, nentries);
+	std::shared_ptr<TH1D> h3 = std::make_shared<TH1D>("h3", "Distribution of Clusters in number of Events;Entry num;Number of Events", 100, 0, nentries);
 	p.share(h3);
 	std::shared_ptr<TH2D> h4 = std::make_shared<TH2D>("h4", "The Event with the Largest Pixel Size;X;y", (x_max - x_min) , x_min, x_max, (y_max - y_min), y_min, y_max);
 	p.share(h4);
@@ -455,26 +413,29 @@ void analysis::Find_AutoCluster(){
 	sort(cluster.rbegin(), cluster.rend());
 	Long64_t pixel_max = cluster[0].Get_eventnum();
 	weight = myobj->Get_ADC(pixel_max);
+	weight = means_subtract();
+	weight = pedestal_subtract();
+	origin_map = create_map();
 	std::shared_ptr<TH1D> hist = std::make_shared<TH1D>("hist", "1D Histogram;X;Entries", 100, 700, 1800);
 	p.share(hist);
 	Fill_1Dhist(hist);
 	//閾値の設定
 	threshold = create_threshold(hist->GetMean(), hist->GetStdDev()); 
-	weight = pedestal_subtract();
 	Fill_2Dhist(h4);
 	int h1_min = h1->GetBinCenter(h1->FindFirstBinAbove(0)), h1_max = h1->GetBinCenter(h1->FindLastBinAbove(0));
 	int h2_min = h2->GetBinCenter(h2->FindFirstBinAbove(0)), h2_max = h2->GetBinCenter(h2->FindLastBinAbove(0));
 
 	h1->GetXaxis()->SetRangeUser(h1_min, h1_max + 1);
 	h2->GetXaxis()->SetRangeUser(h2_min, h2_max + 1);
-	h1->SetFillColor(kAzure-9);
-	h2->SetFillColor(kGreen-9);
-	h3->SetFillColor(kPink-9);
+	h1->SetFillColor(kAzure-9); h1->SetLineColor(kAzure);
+	h2->SetFillColor(kGreen-9); h2->SetLineColor(kGreen);
+	h3->SetFillColor(kPink-9); h3->SetLineColor(kPink);
+	h4->SetStats(0);
 
 	if(h1_max - h1_min <= 10) AdjustBinsToIntegers(h1, make_step(h1_min, h1_max));
 	if(h2_max - h2_min <= 10) AdjustBinsToIntegers(h2, make_step(h2_min, h2_max), 1);
 
-	std::shared_ptr<TText> text3 = std::make_shared<TText>(50, (h3->GetMaximum()), "Separated every 10 events");
+	std::shared_ptr<TText> text3 = std::make_shared<TText>(50, (h3->GetMaximum()), Form("Separated every %d events", nentries / 100));
 	p.share(text3);
 	// pixel_maxの情報を追加
     std::shared_ptr<TText> text4 = std::make_shared<TText>(0, -15, Form("max_event:%lld", pixel_max));
@@ -482,7 +443,7 @@ void analysis::Find_AutoCluster(){
 	c1->cd(1); h1->Draw("");
 	c1->cd(2); h2->Draw("");
 	c1->cd(3); h3->Sumw2(0);  h3->Draw(""); text3->Draw();
-	c1->cd(4); h4->Draw(""); text4->Draw();
+	c1->cd(4); h4->Draw(""); text4->Draw(); highlightv2();
 	c1->Update();
 	//SaveCanvasWithHVPart(c1, path, "info");
 	Position_Resolution();
@@ -507,12 +468,13 @@ void analysis::Position_Resolution(){
 
 		pixels_pos->Fill(pos.first, pos.second);
 	}
-	std::shared_ptr<TCanvas> hist2D = std::make_shared<TCanvas>("hist2D", "Position_Resolution", 600, 600);
+	std::shared_ptr<TCanvas> hist2D = std::make_shared<TCanvas>("hist2D", "Position_Resolution", 400, 400);
 	p.share(hist2D);
+	pixels_pos->SetStats(0);
 	pixels_pos->Draw("COLZ");
 	hist2D->Update();
 	// SaveCanvasWithHVPart(hist2D, path, "pos");
-	std::shared_ptr<TCanvas> hist1D_pjX = std::make_shared<TCanvas>("hist1D_pjx", "ProjectionX", 600, 600);
+	std::shared_ptr<TCanvas> hist1D_pjX = std::make_shared<TCanvas>("hist1D_pjx", "ProjectionX", 400, 400);
 	p.share(hist1D_pjX);
 	std::shared_ptr<TH1D> projX(pixels_pos->ProjectionX(), [](TH1D* ptr) {
 		if (ptr) {
@@ -526,10 +488,11 @@ void analysis::Position_Resolution(){
 	p.share(projX);
 	projX->Sumw2(0);
 	projX->Draw();
+	projX->SetStats(0);
 	text1->Draw();
 	hist1D_pjX->Update();
 	// SaveCanvasWithHVPart(hist1D_pjX, path, "pjx");
-	std::shared_ptr<TCanvas> hist1D_pjY = std::make_shared<TCanvas>("hist1D_pjY", "ProjectionY", 600, 600);
+	std::shared_ptr<TCanvas> hist1D_pjY = std::make_shared<TCanvas>("hist1D_pjY", "ProjectionY", 400, 400);
 	p.share(hist1D_pjY);
 	// TH1D* を shared_ptr にラップして管理
 	std::shared_ptr<TH1D> projY(pixels_pos->ProjectionY(), [](TH1D* ptr) {
@@ -544,6 +507,7 @@ void analysis::Position_Resolution(){
 	p.share(text2);
 	projY->Sumw2(0);
 	projY->Draw();
+	projY->SetStats(0);
 	text2->Draw();
 	hist1D_pjY->Update();
 	// SaveCanvasWithHVPart(hist1D_pjY, path, "pjy");
@@ -552,6 +516,7 @@ void analysis::Position_Resolution(){
 void analysis::read_param(param params){
 	opt_Red = params.in.opt_Red;
 	opt_subtract = params.in.opt_Subtract;
+	opt_meanSubtract = params.in.opt_meanSubtract;
 	opt_Fitting = params.in.opt_Fitting;
 	opt_AutoCluster = params.in.AutoCluster;
 	event_num = params.in.num_entry;
@@ -638,4 +603,11 @@ void analysis::init_DataStructure(){
 	cluster.clear();
 	weight.clear();
 	origin_map.clear();
+}
+
+void analysis::change_file(){
+	cluster.clear();
+	weight.clear();
+	origin_map.clear();
+	means.clear();
 }
