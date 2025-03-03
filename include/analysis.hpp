@@ -96,7 +96,7 @@ class analysis{
 	/// @param c1 
 	/// @param path 
 	/// @param customInfo 
-	void Save(TCanvas* c1, const TString& path, const TString& customInfo);
+	void Save(std::shared_ptr<TCanvas> c1, const TString& path, const TString& customInfo);
 	/// @brief ある1イベントをその1イベントの閾値で作成し可視化する関数
 	void AnalyzeAndVisualizeClusters();
 	/// @brief ある1イベントを全てのイベントの同じ座標のピクセルを用いて閾値を作成し、可視化する関数
